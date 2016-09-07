@@ -47,37 +47,42 @@ public class OpenIDConnectFilter extends BaseFilter {
     /**
      * Location of the authorization service (request token)
      */
-    public static final String AUTHORIZATION_LOCATION = PropsUtil.get("fnv.sso.authorization-location");
+    public static final String AUTHORIZATION_LOCATION = PropsUtil.get("openidconnect.authorization-location");
 
     /**
      * Location of the token service (exchange code for token)
      */
-    public static final String TOKEN_LOCATION = PropsUtil.get("fnv.sso.token-location");
+    public static final String TOKEN_LOCATION = PropsUtil.get("openidconnect.token-location");
 
     /**
      * UserInfo endpoint
      */
-    public static final String PROFILE_URI = PropsUtil.get("fnv.sso.profile-uri");
+    public static final String PROFILE_URI = PropsUtil.get("openidconnect.profile-uri");
 
     /**
      * Name of the issuer, to be confirmed with the contents of the ID token
      */
-    public static final String ISSUER = PropsUtil.get("fnv.sso.issuer");
+    public static final String ISSUER = PropsUtil.get("openidconnect.issuer");
 
     /**
      * OAuth client id.
      */
-    private static final String CLIENT_ID = PropsUtil.get("fnv.sso.client-id");
+    private static final String CLIENT_ID = PropsUtil.get("openidconnect.client-id");
 
     /**
      * OAuth client secret.
      */
-    private static final String SECRET = PropsUtil.get("fnv.sso.secret");
+    private static final String SECRET = PropsUtil.get("openidconnect.secret");
+
+    /**
+     * Scope of access token to request from OIDC Provider
+     */
+    private static final String SCOPE = GetterUtil.getString(PropsUtil.get("openidconnect.scope"), "openid profile email");
 
     /**
      * Whether this OpenID Connect filter/autologin is enabled or not.
      */
-    public static final boolean USE_OPENID_CONNECT = GetterUtil.getBoolean(PropsUtil.get("fnv.sso.enableOpenIDConnect"));
+    public static final boolean USE_OPENID_CONNECT = GetterUtil.getBoolean(PropsUtil.get("openidconnect.enableOpenIDConnect"));
 
     @Override
     protected Log getLog() {
@@ -189,7 +194,7 @@ public class OpenIDConnectFilter extends BaseFilter {
                     .setClientId(clientId)
                     .setRedirectURI(getRedirectUri(request))
                     .setResponseType("code")
-                    .setScope("openid profile email FNV FNV-lidstatus") // TODO Make configurable?
+                    .setScope(SCOPE)
                     .setState(generateStateParam(request))
                     .buildQueryMessage();
             LOG.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());
