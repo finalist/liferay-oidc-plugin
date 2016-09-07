@@ -1,7 +1,7 @@
 # OpenID Connect Liferay plugin
 This plugin uses the OpenID Connect protocol to make Liferay use external authentication sources like social networks and SSO systems.
 
-## How does this work
+## Introduction
 
 The OpenID Connect protocol delegates authentication to a so called Provider, and supplies the requesting application (in our case: Liferay) with an access token (like a temporary, restricted password) to request additional user information.
  With this user information, a Liferay-account is created if it does not exist, and to Liferay the user authentication is confirmed. 
@@ -42,6 +42,7 @@ Secret of the client, after registration of the Liferay portal, just like the cl
 
 ### `openidconnect.scope`
 Scope(s) of the access token (space separated), should be the same (or a subset) of the scopes allowed by the provider to the client. Default value: `openid profile email`
+
 ### Complete copy-paste-friendly code block with all properties
 
 ~~~
@@ -54,6 +55,17 @@ openidconnect.client-id=7kasuf1-123123adfaafdsflni7me2kr.apps.googleusercontent.
 openidconnect.secret=xyz
 openidconnect.scope=openid profile email
 ~~~
+
+
+### Try out with Google as OIDC Provider
+
+* Create a project at https://console.developers.google.com/apis/dashboard, of type 'web application'
+* Create credentials, of type 'OAuth Client ID'
+    * Application type: 'web application'
+    * Name: anything, like 'My Liferay portal'
+    * Authorised redirect URIs: `http://localhost:8080/c/portal/login` (or any public URL, but it has to end in the Liferay's special path `/c/portal/login`)
+    * Copy-paste the created client credentials into your portal-ext.properties
+* Configure the plugin with the rest of the properties, as stated above.
 
 ### Sequence diagram
 This diagram focuses on the interaction of typical Liferay components and components of the plugin. 
