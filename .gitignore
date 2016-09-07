@@ -1,0 +1,7 @@
+*.iml
+.idea
+.project
+.classpath
+target
+pom.xml.*
+.settings

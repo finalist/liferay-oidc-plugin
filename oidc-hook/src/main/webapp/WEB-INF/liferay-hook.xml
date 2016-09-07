@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hook PUBLIC "-//Liferay//DTD Hook 6.2.0//EN" "http://www.liferay.com/dtd/liferay-hook_6_2_0.dtd">
+<hook>
+    <portal-properties>portal-hook.properties</portal-properties>
+    <servlet-filter>
+        <servlet-filter-name>OpenID Connect SSO Filter</servlet-filter-name>
+        <servlet-filter-impl>nl.fnv.ledenportaal.sso.OpenIDConnectFilter</servlet-filter-impl>
+    </servlet-filter>
+    <servlet-filter-mapping>
+        <servlet-filter-name>OpenID Connect SSO Filter</servlet-filter-name>
+        <url-pattern>/c/portal/login</url-pattern>
+    </servlet-filter-mapping>
+</hook>
