@@ -1,5 +1,4 @@
 package nl.finalist.liferay.oidc;
-
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -34,31 +33,12 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
     private static final Log LOG = LogFactoryUtil.getLog(OpenIDConnectAutoLogin.class);
 
     /**
-     * These session attributes will be retained when logging in.
-     * Liferay has this 'session fixation prevention' which renews a session during login (resetting the session id)
-     * which normally wipes out all current attributes.
-     * Using the portal.property 'session.phishing.protected.attributes' these attributes are retained.
+     * The naming of the OpenID Connect UserInfo attributes
      */
-    public static final String IS_EXECUTIVE_MEMBER_SERVICE_SESSION_PARAM = "isDienstverlenendKaderlid";
-    public static final String IS_EXECUTIVE_MEMBER_SESSION_PARAM = "isKaderlid";
-    public static final String IS_MEMBER_SESSION_PARAM = "isLid";
-    public static final String UNION_ID_SESSION_PARAM = "bondsId";
-    public static final String PERSON_ID_SESSION_PARAM = "persoonsId";
-    public static final String FIRST_NAME_SESSION_PARAM = "firstName";
-    public static final String LAST_NAME_SESSION_PARAM = "lastName";
-    public static final String TUSSENVOEGSEL_SESSION_PARAM = "tussenvoegsel";
 
-    /**
-     * Part of the interface with SSO: the naming of the OpenID Connect UserInfo attributes
-     */
-    private static final String USERINFO_ATTR_IS_MEMBER = "FNVIsLid";
-    private static final String USERINFO_ATTR_IS_EXECUTIVE_MEMBER = "FNVIsKaderlid";
-    private static final String USERINFO_ATTR_IS_EXECUTIVE_MEMBER_SERVICE = "FNVIsDienstverlenendKaderlid";
-    private static final String USERINFO_ATTR_UNION_ID = "FNVBondsId";
-    private static final String USERINFO_ATTR_PERSON_ID = "FNVPersoonsId";
     private static final String USERINFO_ATTR_FIRST_NAME = "given_name";
     private static final String USERINFO_ATTR_LAST_NAME = "family_name";
-    private static final String USERINFO_ATTR_TUSSENVOEGSEL = "FNVTussenvoegsel";
+    private static final String USERINFO_ATTR_EMAIL = "email";
 
 
     @Override
@@ -77,13 +57,13 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
             // Normal flow, apparently no current OpenID conversation
             LOG.trace("No current OpenID Connect conversation, no auto login");
             return null;
-        } else if (Validator.isBlank(userInfo.get("email"))) {
+        } else if (Validator.isBlank(userInfo.get(USERINFO_ATTR_EMAIL))) {
             LOG.error("Unexpected: OpenID Connect UserInfo does not contain email field. " +
                     "Cannot correlate to Liferay user. UserInfo: " + userInfo);
             return null;
         } else {
             LOG.trace("Found OpenID Connect session attribute, userinfo: " + userInfo);
-            String emailAddress = userInfo.get("email");
+            String emailAddress = userInfo.get(USERINFO_ATTR_EMAIL);
             try {
                 long companyId = PortalUtil.getCompanyId(request);
                 User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
@@ -91,20 +71,14 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
                 if (user == null) {
                     LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
                     user = createUser(userInfo, companyId, request);
+                } else {
+                    LOG.debug("User found, updating name details with info from userinfo");
+                    updateUser(user, userInfo);
                 }
+
                 LOG.trace("Returning credentials for userId " + user.getUserId() + ", email: "
                         + user.getEmailAddress());
 
-                // set needed information on the session
-                session.setAttribute(IS_MEMBER_SESSION_PARAM, userInfo.get(USERINFO_ATTR_IS_MEMBER));
-                session.setAttribute(IS_EXECUTIVE_MEMBER_SESSION_PARAM, userInfo.get(USERINFO_ATTR_IS_EXECUTIVE_MEMBER));
-                session.setAttribute(IS_EXECUTIVE_MEMBER_SERVICE_SESSION_PARAM,
-                        userInfo.get(USERINFO_ATTR_IS_EXECUTIVE_MEMBER_SERVICE));
-                session.setAttribute(UNION_ID_SESSION_PARAM, userInfo.get(USERINFO_ATTR_UNION_ID));
-                session.setAttribute(PERSON_ID_SESSION_PARAM, userInfo.get(USERINFO_ATTR_PERSON_ID));
-                session.setAttribute(FIRST_NAME_SESSION_PARAM, userInfo.get(USERINFO_ATTR_FIRST_NAME));
-                session.setAttribute(LAST_NAME_SESSION_PARAM, userInfo.get(USERINFO_ATTR_LAST_NAME));
-                session.setAttribute(TUSSENVOEGSEL_SESSION_PARAM, userInfo.get(USERINFO_ATTR_TUSSENVOEGSEL));
                 return new String[]{String.valueOf(user.getUserId()),
                         user.getPassword(),
                         String.valueOf(user.isPasswordEncrypted())};
@@ -115,7 +89,8 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
         }
     }
 
-    private User createUser(Map<String, String> userInfo, long companyId, HttpServletRequest request) throws Exception {
+    protected User createUser(Map<String, String> userInfo, long companyId, HttpServletRequest request) throws
+            Exception {
 
         ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(WebKeys.THEME_DISPLAY);
         Locale locale = LocaleUtil.getDefault();
@@ -125,13 +100,9 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
             locale = themeDisplay.getLocale();
         }
         String givenName = userInfo.get(USERINFO_ATTR_FIRST_NAME);
-        String familyName = "";
-        String tussenvoegsel = userInfo.get(USERINFO_ATTR_TUSSENVOEGSEL);
-        if (tussenvoegsel != null && !tussenvoegsel.isEmpty()) {
-            familyName = tussenvoegsel + " ";
-        }
-        familyName += userInfo.get(USERINFO_ATTR_LAST_NAME);
-        return addUser(companyId, givenName, familyName, userInfo.get("email"), locale);
+        String familyName = userInfo.get(USERINFO_ATTR_LAST_NAME);
+        String emailAddress = userInfo.get(USERINFO_ATTR_EMAIL);
+        return addUser(companyId, givenName, familyName, emailAddress, locale);
     }
 
     // Copied from OpenSSOAutoLogin.java
@@ -177,4 +148,18 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
         UserLocalServiceUtil.updateUser(user);
         return user;
     }
+
+    protected void updateUser(User user, Map<String, String> userInfo) {
+
+        user.setLastName(userInfo.get(USERINFO_ATTR_FIRST_NAME));
+        user.setFirstName(userInfo.get(USERINFO_ATTR_FIRST_NAME));
+
+        try {
+            UserLocalServiceUtil.updateUser(user);
+        } catch (SystemException e) {
+            LOG.error("Could not update user with new name attributes", e);
+        }
+
+    }
+
 }
