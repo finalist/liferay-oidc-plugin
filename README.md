@@ -1,7 +1,20 @@
 # OpenID Connect Liferay plugin
-## 
-###
-###
+This plugin uses the OpenID Connect protocol to make Liferay use external authentication sources like social networks and SSO systems.
+
+## How does this work
+
+The OpenID Connect protocol delegates authentication to a so called Provider, and supplies the requesting application (in our case: Liferay) with an access token (like a temporary, restricted password) to request additional user information.
+ With this user information, a Liferay-account is created if it does not exist, and to Liferay the user authentication is confirmed. 
+
+### Components
+
+The plugin comprises of two parts:
+
+* a Servlet Filter (using Liferay's servlet filter hook) to intercept the normal login flow and redirect to the OpenID Connect provider, get the access token and get user information 
+* an Autologin (using Liferay's portal properties hook `auto.login.hooks=`) to complete the authentication
+
+### 
+
 ### Sequence diagram
 This diagram focuses on the interaction of typical Liferay components and components of the plugin. 
 It simplifies the actual OpenID Connect authorization code flow a bit, which is documented properly in other locations.
