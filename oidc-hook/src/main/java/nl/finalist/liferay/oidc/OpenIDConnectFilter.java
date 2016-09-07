@@ -1,4 +1,4 @@
-package nl.fnv.ledenportaal.sso;
+package nl.finalist.liferay.oidc;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package nl.fnv.ledenportaal.sso;
+package nl.finalist.liferay.oidc;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
