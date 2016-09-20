@@ -45,14 +45,14 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
     @Override
     protected String[] doLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        if (!OpenIDConnectFilter.USE_OPENID_CONNECT) {
+        if (!LibFilter.USE_OPENID_CONNECT) {
             LOG.trace("OpenIDConnectAutoLogin deployed, altough not activated. Will skip it.");
             return null;
         }
 
         HttpSession session = request.getSession();
         Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
-                OpenIDConnectFilter.OPENID_CONNECT_SESSION_ATTR);
+                LibFilter.OPENID_CONNECT_SESSION_ATTR);
 
         if (userInfo == null) {
             // Normal flow, apparently no current OpenID conversation
