@@ -14,7 +14,9 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 		immediate = true,
         property = {
-                "dispatcher=FORWARD", "dispatcher=REQUEST", "servlet-context-name=",
+                "dispatcher=FORWARD",
+                "dispatcher=REQUEST",
+                "servlet-context-name=",
                 "servlet-filter-name=SSO OpenID Connect Filter",
                 "url-pattern=/c/portal/login"
         },
