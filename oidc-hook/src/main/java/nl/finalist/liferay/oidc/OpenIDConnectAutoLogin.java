@@ -11,7 +11,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -45,7 +47,7 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
     @Override
     protected String[] doLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        if (!LibFilter.USE_OPENID_CONNECT) {
+        if (!GetterUtil.get(PropsUtil.get("openidconnect.enableOpenIDConnect"), false)) {
             LOG.trace("OpenIDConnectAutoLogin deployed, altough not activated. Will skip it.");
             return null;
         }
