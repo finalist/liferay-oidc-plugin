@@ -29,6 +29,12 @@ public class LibFilter  {
     public static final String REQ_PARAM_CODE = "code";
     public static final String REQ_PARAM_STATE = "state";
 
+    public enum FilterResult {
+    	CONTINUE_CHAIN, 
+    	BREAK_CHAIN;
+    }
+    
+    
     /**
      * Session attribute name containing the UserInfo
      */
@@ -101,15 +107,14 @@ public class LibFilter  {
      * @param response the http response
      * @param filterChain the filterchain
      * @throws Exception according to interface.
+     * @return FilterResult, to be able to distinct between continuing the chain or breaking it.
      */
-    protected void processFilter(Class filterClass, HttpServletRequest request, HttpServletResponse response, FilterChain 
+    protected FilterResult processFilter(HttpServletRequest request, HttpServletResponse response, FilterChain 
             filterChain) throws Exception {
-
         // If the plugin is not enabled, short circuit immediately
         if (!USE_OPENID_CONNECT) {
             liferay.trace("OpenIDConnectFilter deployed, altough not activated. Will skip it.");
-            processFilter(LibFilter.class, request, response, filterChain);
-            return;
+            return FilterResult.CONTINUE_CHAIN;
         }
 
         liferay.trace("In processFilter()...");
@@ -125,12 +130,12 @@ public class LibFilter  {
                         "Will not exchange code for token twice.");
             }
             // continue chain
-            processFilter(filterClass, request, response, filterChain);
+            return FilterResult.CONTINUE_CHAIN;
         } else {
             liferay.trace("About to redirect to OpenID Provider");
             redirectToLogin(request, response, CLIENT_ID);
             // no continuation of the filter chain; we expect the redirect to commence.
-        }
+            return FilterResult.BREAK_CHAIN;        }
     }
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {

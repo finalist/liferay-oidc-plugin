@@ -6,7 +6,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 
 public class Liferay70 implements OIDCLiferay {
 
@@ -15,17 +17,17 @@ public class Liferay70 implements OIDCLiferay {
 
     @Override
     public String getPortalProperty(String propertyKey) {
-        return null;
+        return PropsUtil.get(propertyKey);
     }
 
     @Override
     public String getPortalProperty(String propertyKey, String defaultString) {
-        return null;
+        return GetterUtil.getString(PropsUtil.get(propertyKey), defaultString);
     }
 
     @Override
     public boolean getPortalProperty(String propertyKey, boolean defaultBoolean) {
-        return false;
+        return GetterUtil.getBoolean(PropsUtil.get(propertyKey), defaultBoolean);
     }
 
     @Override

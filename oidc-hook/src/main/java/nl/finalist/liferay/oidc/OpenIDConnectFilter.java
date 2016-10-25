@@ -5,6 +5,8 @@ import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import nl.finalist.liferay.oidc.LibFilter.FilterResult;
+
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.BaseFilter;
@@ -45,8 +47,10 @@ public class OpenIDConnectFilter extends BaseFilter {
     protected void processFilter(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws Exception {
 
-        libFilter.processFilter(this.getClass(), request, response, filterChain);
-
+        FilterResult filterResult = libFilter.processFilter(request, response, filterChain);
+        if (filterResult == FilterResult.CONTINUE_CHAIN) { 
+        	processFilter(getClass(), request, response, filterChain);
+        }
     }
 
 }

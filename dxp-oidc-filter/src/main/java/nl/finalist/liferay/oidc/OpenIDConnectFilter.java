@@ -11,6 +11,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.BaseFilter;
 import org.osgi.service.component.annotations.Component;
 
+import nl.finalist.liferay.oidc.LibFilter.FilterResult;
+
 @Component(
 		immediate = true,
         property = {
@@ -45,8 +47,11 @@ public class OpenIDConnectFilter extends BaseFilter {
             FilterChain filterChain)
             throws Exception {
 
-        libFilter.processFilter(this.getClass(), request, response, filterChain);
-
+        FilterResult filterResult = libFilter.processFilter(request, response, filterChain);
+        if (filterResult == FilterResult.CONTINUE_CHAIN) {
+        	processFilter(getClass().getName(), request, response, filterChain);
+        	
+        }
     }
 
 
