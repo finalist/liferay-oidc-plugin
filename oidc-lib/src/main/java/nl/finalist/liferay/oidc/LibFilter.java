@@ -29,6 +29,11 @@ public class LibFilter  {
     public static final String REQ_PARAM_CODE = "code";
     public static final String REQ_PARAM_STATE = "state";
 
+    /**
+     * Property that is used to configure whether to enable OpenID Connect auth
+     */
+    public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
+
     public enum FilterResult {
     	CONTINUE_CHAIN, 
     	BREAK_CHAIN;
@@ -90,7 +95,7 @@ public class LibFilter  {
         TOKEN_LOCATION = liferay.getPortalProperty("openidconnect.token-location");
         SCOPE = liferay.getPortalProperty("openidconnect.scope", "openid profile email");
         PROFILE_URI = liferay.getPortalProperty("openidconnect.profile-uri");
-        USE_OPENID_CONNECT = liferay.getPortalProperty("openidconnect.enableOpenIDConnect", false);
+        USE_OPENID_CONNECT = liferay.getPortalProperty(PROPKEY_ENABLE_OPEN_IDCONNECT, false);
         ISSUER = liferay.getPortalProperty("openidconnect.issuer");
         CLIENT_ID = liferay.getPortalProperty("openidconnect.client-id");
         SECRET = liferay.getPortalProperty("openidconnect.secret");
