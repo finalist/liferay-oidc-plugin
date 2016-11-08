@@ -8,8 +8,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.BaseFilter;
+
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import nl.finalist.liferay.oidc.LibFilter.FilterResult;
 
@@ -28,7 +32,15 @@ public class OpenIDConnectFilter extends BaseFilter {
 
     private static final Log LOG = LogFactoryUtil.getLog(OpenIDConnectFilter.class);
     private LibFilter libFilter;
+    
+    @Reference
+    private UserLocalService _userLocalService;
 
+    @Activate
+    public void activate() {
+    	libFilter = new LibFilter(new Liferay70(_userLocalService));
+    }
+    
     @Override
     protected Log getLog() {
         return LOG;
@@ -37,8 +49,6 @@ public class OpenIDConnectFilter extends BaseFilter {
     @Override
     public void init(FilterConfig filterConfig) {
         super.init(filterConfig);
-        libFilter = new LibFilter(new Liferay70());
-
     }
 
     @Override
