@@ -4,7 +4,7 @@
     <portal-properties>portal-hook.properties</portal-properties>
     <servlet-filter>
         <servlet-filter-name>OpenID Connect SSO Filter</servlet-filter-name>
-        <servlet-filter-impl>nl.finalist.liferay.oidc.OpenIDConnectFilter</servlet-filter-impl>
+        <servlet-filter-impl>nl.finalist.liferay.oidc.LibFilter</servlet-filter-impl>
     </servlet-filter>
     <servlet-filter-mapping>
         <servlet-filter-name>OpenID Connect SSO Filter</servlet-filter-name>

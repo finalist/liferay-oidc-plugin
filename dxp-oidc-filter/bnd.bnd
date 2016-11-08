@@ -1,0 +1,25 @@
+Bundle-SymbolicName: nl.finalist.liferay.oidc
+
+Bundle-Version: 1.0.0.${tstamp}
+
+Import-Package: \
+	org.osgi.framework;version="[1.7,2)",\
+	*
+
+Private-Package: \
+	nl.finalist.liferay.oidc
+
+
+
+-includeresource:\
+  @oidc-lib-${project.version}.jar,\
+  @org.apache.oltu.oauth2.jwt-1.*.jar,\
+  @org.apache.oltu.oauth2.client-1.*.jar,\
+  @org.apache.oltu.oauth2.authzserver-1.*.jar,\
+  @org.apache.oltu.oauth2.common-1.*.jar,\
+  @org.apache.oltu.commons.json-1.*.jar,\
+  @org.apache.oltu.commons.encodedtoken-1.*.jar,\
+  @jackson-annotations-*.jar,\
+  @jackson-core-*.jar,\
+  @jackson-databind-*.jar,\
+  @commons-lang3-*.jar
