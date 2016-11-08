@@ -1,6 +1,8 @@
 package nl.finalist.liferay.oidc;
 
 import java.util.Map;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -27,6 +29,7 @@ public class LibAutoLogin {
 
     public LibAutoLogin(OIDCLiferay liferay) {
         this.liferay = liferay;
+        liferay.info("Initialized LibAutoLogin with Liferay API: " + liferay.getClass().getName());
     }
 
 
@@ -57,7 +60,8 @@ public class LibAutoLogin {
             long companyId = liferay.getCompanyId(request);
             String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName);
             liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
-            return new String[]{userId, "", "false"};
+            
+            return new String[]{userId, UUID.randomUUID().toString(), "false"};
         }
     }
 }
