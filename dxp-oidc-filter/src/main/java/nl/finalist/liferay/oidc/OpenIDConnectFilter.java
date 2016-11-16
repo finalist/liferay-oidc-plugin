@@ -38,7 +38,7 @@ public class OpenIDConnectFilter extends BaseFilter {
 
     @Activate
     public void activate() {
-    	libFilter = new LibFilter(new Liferay70(_userLocalService));
+    	libFilter = new LibFilter(new Liferay70Adapter(_userLocalService));
     }
     
     @Override

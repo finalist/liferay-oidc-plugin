@@ -85,9 +85,9 @@ public class LibFilter  {
      */
     public final boolean USE_OPENID_CONNECT;
 
-    private final OIDCLiferay liferay;
+    private final LiferayAdapter liferay;
 
-    public LibFilter(OIDCLiferay liferay) {
+    public LibFilter(LiferayAdapter liferay) {
         this.liferay = liferay;
 
 

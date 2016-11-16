@@ -3,7 +3,7 @@ package nl.finalist.liferay.oidc;
 import javax.servlet.http.HttpServletRequest;
 
 
-public interface OIDCLiferay {
+public interface LiferayAdapter {
 
     String getPortalProperty(String propertyKey);
     String getPortalProperty(String propertyKey, String defaultString);
@@ -25,11 +25,11 @@ public interface OIDCLiferay {
      * Create user or update if already existing. Keys to base existance on are: companyId, emailAddress.
      * GivenName and familyName are used for setting the according fields.
      *
-     * @param companyId
-     * @param emailAddress
-     * @param firstName
-     * @param lastName
-     * @return userId as a String
+     * @param companyId the portal instance id
+     * @param emailAddress the email address of the Liferay user
+     * @param firstName the first name of the Liferay user
+     * @param lastName last name of the Liferay user
+     * @return the userId of the created or updated User, as a String
      */
     String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName);
 

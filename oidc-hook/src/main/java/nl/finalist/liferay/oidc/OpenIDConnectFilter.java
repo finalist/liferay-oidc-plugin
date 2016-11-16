@@ -28,7 +28,7 @@ public class OpenIDConnectFilter extends BaseFilter {
 
     @Override
     public void init(FilterConfig filterConfig) {
-        libFilter = new LibFilter(new Liferay62());
+        libFilter = new LibFilter(new Liferay62Adapter());
 
         super.init(filterConfig);
     }

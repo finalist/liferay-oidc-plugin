@@ -25,9 +25,9 @@ public class LibAutoLogin {
     private static final String USERINFO_ATTR_LAST_NAME = "family_name";
     private static final String USERINFO_ATTR_EMAIL = "email";
 
-    private final OIDCLiferay liferay;
+    private final LiferayAdapter liferay;
 
-    public LibAutoLogin(OIDCLiferay liferay) {
+    public LibAutoLogin(LiferayAdapter liferay) {
         this.liferay = liferay;
         liferay.info("Initialized LibAutoLogin with Liferay API: " + liferay.getClass().getName());
     }

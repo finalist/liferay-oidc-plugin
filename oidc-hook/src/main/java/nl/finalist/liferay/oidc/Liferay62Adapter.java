@@ -8,29 +8,21 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.model.User;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.UserLocalServiceUtil;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.util.PwdGenerator;
 
+public class Liferay62Adapter implements LiferayAdapter {
 
-public class Liferay70 implements OIDCLiferay {
+    private static final Log LOG = LogFactoryUtil.getLog(Liferay62Adapter.class);
 
-    private static final Log LOG = LogFactoryUtil.getLog(Liferay70.class);
-
-    private UserLocalService userLocalService;
-
-    
-    public Liferay70(UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	@Override
+    @Override
     public String getPortalProperty(String propertyKey) {
         return PropsUtil.get(propertyKey);
     }
@@ -66,11 +58,6 @@ public class Liferay70 implements OIDCLiferay {
     }
 
     @Override
-    public void error(String s) {
-        LOG.error(s);
-    }
-
-    @Override
     public String getCurrentCompleteURL(HttpServletRequest request) {
         return PortalUtil.getCurrentCompleteURL(request);
     }
@@ -86,15 +73,19 @@ public class Liferay70 implements OIDCLiferay {
 
     @Override
     public long getCompanyId(HttpServletRequest request) {
-        return PortalUtil.getCompanyId(request);
+        return 0;
     }
 
+    @Override
+    public void error(String s) {
+        LOG.error(s);
+    }
 
     @Override
     public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName) {
 
         try {
-            User user = userLocalService.fetchUserByEmailAddress(companyId, emailAddress);
+            User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
 
             if (user == null) {
                 LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
@@ -140,7 +131,7 @@ public class Liferay70 implements OIDCLiferay {
         boolean sendEmail = false;
         ServiceContext serviceContext = new ServiceContext();
 
-        User user = userLocalService.addUser(
+        User user = UserLocalServiceUtil.addUser(
                 creatorUserId, companyId, autoPassword, password1, password2,
                 autoScreenName, screenName, emailAddress, facebookId, openId,
                 locale, firstName, middleName, lastName, prefixId, suffixId, male,
@@ -152,7 +143,7 @@ public class Liferay70 implements OIDCLiferay {
         // No reminder query at first login.
         user.setReminderQueryQuestion("x");
         user.setReminderQueryAnswer("y");
-        userLocalService.updateUser(user);
+        UserLocalServiceUtil.updateUser(user);
         return user;
     }
 
@@ -161,7 +152,7 @@ public class Liferay70 implements OIDCLiferay {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         try {
-            userLocalService.updateUser(user);
+            UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
             LOG.error("Could not update user with new name attributes", e);
         }

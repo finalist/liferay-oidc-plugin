@@ -28,7 +28,7 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
 
 	@Activate
 	void activate() {
-	    libAutologin = new LibAutoLogin(new Liferay70(_userLocalService));
+	    libAutologin = new LibAutoLogin(new Liferay70Adapter(_userLocalService));
 	}
 	
 	public OpenIDConnectAutoLogin() {
