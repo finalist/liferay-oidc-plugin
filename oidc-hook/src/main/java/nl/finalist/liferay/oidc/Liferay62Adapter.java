@@ -73,7 +73,7 @@ public class Liferay62Adapter implements LiferayAdapter {
 
     @Override
     public long getCompanyId(HttpServletRequest request) {
-        return 0;
+        return PortalUtil.getCompanyId(request);
     }
 
     @Override
