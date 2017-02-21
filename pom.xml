@@ -57,7 +57,20 @@
                 <version>1.7.13</version>
             </dependency>
 
+            <!--
+            Specifically a newer version of the encodedtoken sublib, because of a bugfix in complying to the spec.
+            https://github.com/gvanderploeg/liferay-oidc-plugin/issues/3
+            https://issues.apache.org/jira/browse/OLTU-200
+            https://github.com/apache/oltu/commit/ec5d53b8e9f9d798079ab6014c8d5d24e86dc16d
 
+            As soon as this version is used by its parent (currently org.apache.oltu.oauth2:org.apache.oltu.oauth2
+            .jwt:jar:1.0.3:compile) then this depMan. entry can be removed.
+            -->
+            <dependency>
+                <groupId>org.apache.oltu.commons</groupId>
+                <artifactId>org.apache.oltu.commons.encodedtoken</artifactId>
+                <version>1.0.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
