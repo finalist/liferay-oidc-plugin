@@ -105,3 +105,7 @@ Portal->Browser: 302, Location: /group/private-site/
 Browser->Portal: GET /group/private-site/
 Portal->Browser: 200 OK
 ~~~
+
+### License
+This software is licensed under the Apache 2 license.
+
