@@ -1,5 +1,6 @@
 # OpenID Connect Liferay plugin
 This plugin uses the OpenID Connect protocol to make Liferay use external authentication sources like social networks and SSO systems.
+It is [available in the Liferay Marketplace](https://web.liferay.com/marketplace/-/mp/application/78695724).
 
 ## Introduction
 
