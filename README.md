@@ -1,6 +1,8 @@
-# OpenID Connect Liferay plugin
+# OpenID Connect Liferay plugin ![alt=travis ci status](https://api.travis-ci.org/finalist/liferay-oidc-plugin.svg?branch=master)
+
 This plugin uses the OpenID Connect protocol to make Liferay use external authentication sources like social networks and SSO systems.
 It is [available in the Liferay Marketplace](https://web.liferay.com/marketplace/-/mp/application/78695724).
+
 
 ## Introduction
 
