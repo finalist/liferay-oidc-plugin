@@ -22,16 +22,16 @@
     </organization>
 
     <scm>
-		 <connection>scm:git:ssh://git@bitbucket.finalist.nl:7999/lr-oidc/liferay-openidconnect.git</connection>
-		 <developerConnection>scm:git:ssh://git@bitbucket.finalist.nl:7999/lr-oidc/liferay-openidconnect.git</developerConnection>
-		 <url>https://bitbucket.finalist.nl/projects/LR-OIDC/repos/liferay-openidconnect/browse</url>
-      <tag>HEAD</tag>
-  </scm>
+        <url>http://github.com/finalist/liferay-oidc-plugin</url>
+        <connection>scm:git:git://github.com/finalist/liferay-oidc-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/finalist/liferay-oidc-plugin.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <!-- Version properties -->
-        <liferay-dependency.version>6.2.10.15</liferay-dependency.version>
-        <liferay-maven-plugin.version>6.2.10.13</liferay-maven-plugin.version>
+        <liferay-dependency.version>6.2.5</liferay-dependency.version>
+        <liferay-maven-plugin.version>6.2.10.15</liferay-maven-plugin.version>
         <java.version>1.7</java.version>
 
         <!-- Ignore Mock services in Sonarqube's reports -->
@@ -98,22 +98,18 @@
 
     <distributionManagement>
         <repository>
-            <id>releases-iprofs</id>
-            <name>Finalist Releases</name>
-            <url>https://nexus.iprofs.nl/content/repositories/releases-iprofs</url>
+            <id>releases-public</id>
+            <name>Finalist public releases</name>
+            <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
         </repository>
     </distributionManagement>
 
     <repositories>
         <repository>
-            <id>liferay-ee</id>
-            <url>https://nexus.iprofs.nl/content/repositories/liferay-ee</url>
-        </repository>
-        <repository>
-            <id>releases-iprofs</id>
-            <name>Finalist Releases</name>
-            <url>https://nexus.iprofs.nl/content/repositories/releases-iprofs</url>
-        </repository>
+        <id>releases-public</id>
+        <name>Finalist public releases</name>
+        <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+    </repository>
     </repositories>
 
 	 <licenses>
