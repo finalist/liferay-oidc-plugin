@@ -161,7 +161,7 @@ public class LibFilter  {
                     .setClientSecret(SECRET)
                     .setCode(codeParam)
                     .setRedirectURI(getRedirectUri(request))
-                    .buildQueryMessage();
+                    .buildBodyMessage();
             liferay.debug("Token request to uri: " + tokenRequest.getLocationUri());
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
