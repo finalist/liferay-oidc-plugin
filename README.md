@@ -68,6 +68,7 @@ openidconnect.scope=openid profile email
     * Name: anything, like 'My Liferay portal'
     * Authorised redirect URIs: `http://localhost:8080/c/portal/login` (or any public URL, but it has to end in the Liferay's special path `/c/portal/login`)
     * Copy-paste the created client credentials into your portal-ext.properties
+* Add/enable the Google+ API (from dashboard, click button 'Add API' -> Choose 'Google+')
 * Configure the plugin with the rest of the properties, as stated above.
 
 ### Sequence diagram
