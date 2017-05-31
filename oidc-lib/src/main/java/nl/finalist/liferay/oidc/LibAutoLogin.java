@@ -15,15 +15,7 @@ import org.apache.commons.lang3.StringUtils;
  * set a session attribute containing the UserInfo object (the claims).
  * This AutoLogin will use the claims to find a corresponding Liferay user or create a new one if none found.
  */
-public class LibAutoLogin {
-
-
-    /**
-     * The naming of the OpenID Connect UserInfo attributes
-     */
-    private static final String USERINFO_ATTR_FIRST_NAME = "given_name";
-    private static final String USERINFO_ATTR_LAST_NAME = "family_name";
-    private static final String USERINFO_ATTR_EMAIL = "email";
+public abstract class LibAutoLogin {
 
     private final LiferayAdapter liferay;
 
@@ -32,36 +24,40 @@ public class LibAutoLogin {
         liferay.info("Initialized LibAutoLogin with Liferay API: " + liferay.getClass().getName());
     }
 
-
     public String[] doLogin(HttpServletRequest request, HttpServletResponse response) {
-        if (!liferay.getPortalProperty(LibFilter.PROPKEY_ENABLE_OPEN_IDCONNECT, false)) {
-            liferay.trace("OpenIDConnectAutoLogin deployed, altough not activated. Will skip it.");
-            return null;
-        }
-
-        HttpSession session = request.getSession();
-        Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
-                LibFilter.OPENID_CONNECT_SESSION_ATTR);
-
-        if (userInfo == null) {
-            // Normal flow, apparently no current OpenID conversation
-            liferay.trace("No current OpenID Connect conversation, no auto login");
-            return null;
-        } else if (StringUtils.isBlank(userInfo.get(USERINFO_ATTR_EMAIL))) {
-            liferay.error("Unexpected: OpenID Connect UserInfo does not contain email field. " +
-                    "Cannot correlate to Liferay user. UserInfo: " + userInfo);
-            return null;
-        } else {
-            liferay.trace("Found OpenID Connect session attribute, userinfo: " + userInfo);
-            String emailAddress = userInfo.get(USERINFO_ATTR_EMAIL);
-            String givenName = userInfo.get(USERINFO_ATTR_FIRST_NAME);
-            String familyName = userInfo.get(USERINFO_ATTR_LAST_NAME);
-
-            long companyId = liferay.getCompanyId(request);
-            String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName);
-            liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
+    	String[] userResponse = null;
+    	
+        if (liferay.getPortalProperty(LibFilter.PROPKEY_ENABLE_OPEN_IDCONNECT, false)) {
+        	HttpSession session = request.getSession();
+            Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
+                    LibFilter.OPENID_CONNECT_SESSION_ATTR);
             
-            return new String[]{userId, UUID.randomUUID().toString(), "false"};
+             if (userInfo == null) {
+                 // Normal flow, apparently no current OpenID conversation
+                 liferay.trace("No current OpenID Connect conversation, no auto login");
+             } else if (StringUtils.isBlank(getEmail(userInfo))) {
+                 liferay.error("Unexpected: OpenID Connect UserInfo does not contain email field. " +
+                         "Cannot correlate to Liferay user. UserInfo: " + userInfo);
+             } else {
+                 liferay.trace("Found OpenID Connect session attribute, userinfo: " + userInfo);
+            	 String emailAddress = getEmail(userInfo);
+                 String givenName = getFirstName(userInfo);
+                 String familyName = getLastName(userInfo);
+
+                 long companyId = liferay.getCompanyId(request);
+                 String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName);
+                 liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
+                 
+                 userResponse = new String[]{userId, UUID.randomUUID().toString(), "false"};
+             }
+        } else {
+        	liferay.trace("OpenIDConnectAutoLogin deployed, altough not activated. Will skip it.");
         }
+        
+        return userResponse;
     }
+    
+    protected abstract String getEmail(Map<String, String> userInfo);
+    protected abstract String getFirstName(Map<String, String> userInfo);
+    protected abstract String getLastName(Map<String, String> userInfo);
 }

@@ -1,129 +1,128 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>nl.iprofs.pom</groupId>
-        <artifactId>parent</artifactId>
-        <version>2.0.24</version>
-    </parent>
+	<groupId>nl.finalist.liferay.oidc</groupId>
+	<artifactId>oidc-parent</artifactId>
+	<version>0.2.3-SNAPSHOT</version>
+	<packaging>pom</packaging>
 
-    <groupId>nl.finalist.liferay.oidc</groupId>
-    <artifactId>oidc-parent</artifactId>
-    <version>0.2.3-SNAPSHOT</version>
-    <packaging>pom</packaging>
+	<name>OpenID Connect Liferay plugin parent</name>
+	<inceptionYear>2016</inceptionYear>
 
-    <name>OpenID Connect Liferay plugin parent</name>
-    <inceptionYear>2016</inceptionYear>
+	<organization>
+		<name>Finalist</name>
+		<url>http://www.finalist.nl</url>
+	</organization>
 
-    <organization>
-        <name>Finalist</name>
-        <url>http://www.finalist.nl</url>
-    </organization>
+	<scm>
+		<url>http://github.com/finalist/liferay-oidc-plugin</url>
+		<connection>scm:git:git://github.com/finalist/liferay-oidc-plugin.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/finalist/liferay-oidc-plugin.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
-    <scm>
-        <url>http://github.com/finalist/liferay-oidc-plugin</url>
-        <connection>scm:git:git://github.com/finalist/liferay-oidc-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/finalist/liferay-oidc-plugin.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
+	<properties>
+		<!-- Version properties -->
+		<liferay-dependency.version>6.2.5</liferay-dependency.version>
+		<liferay-maven-plugin.version>6.2.10.15</liferay-maven-plugin.version>
+		<java.version>1.7</java.version>
 
-    <properties>
-        <!-- Version properties -->
-        <liferay-dependency.version>6.2.5</liferay-dependency.version>
-        <liferay-maven-plugin.version>6.2.10.15</liferay-maven-plugin.version>
-        <java.version>1.7</java.version>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
 
-        <!-- Ignore Mock services in Sonarqube's reports -->
-        <sonar.exclusions>**/Mock**.java</sonar.exclusions>
-    </properties>
+		<!-- Ignore Mock services in Sonarqube's reports -->
+		<sonar.exclusions>**/Mock**.java</sonar.exclusions>
+	</properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.12</version>
-            </dependency>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>1.10.19</version>
+			</dependency>
 
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>1.7.13</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>1.7.13</version>
-            </dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>1.7.13</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>1.7.13</version>
+			</dependency>
 
-            <!--
-            Specifically a newer version of the encodedtoken sublib, because of a bugfix in complying to the spec.
-            https://github.com/gvanderploeg/liferay-oidc-plugin/issues/3
-            https://issues.apache.org/jira/browse/OLTU-200
-            https://github.com/apache/oltu/commit/ec5d53b8e9f9d798079ab6014c8d5d24e86dc16d
+			<!-- Specifically a newer version of the encodedtoken sublib, because 
+				of a bugfix in complying to the spec. https://github.com/gvanderploeg/liferay-oidc-plugin/issues/3 
+				https://issues.apache.org/jira/browse/OLTU-200 https://github.com/apache/oltu/commit/ec5d53b8e9f9d798079ab6014c8d5d24e86dc16d 
+				As soon as this version is used by its parent (currently org.apache.oltu.oauth2:org.apache.oltu.oauth2 
+				.jwt:jar:1.0.3:compile) then this depMan. entry can be removed. -->
+			<dependency>
+				<groupId>org.apache.oltu.commons</groupId>
+				<artifactId>org.apache.oltu.commons.encodedtoken</artifactId>
+				<version>1.0.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
-            As soon as this version is used by its parent (currently org.apache.oltu.oauth2:org.apache.oltu.oauth2
-            .jwt:jar:1.0.3:compile) then this depMan. entry can be removed.
-            -->
-            <dependency>
-                <groupId>org.apache.oltu.commons</groupId>
-                <artifactId>org.apache.oltu.commons.encodedtoken</artifactId>
-                <version>1.0.1</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.6</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.6</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<distributionManagement>
+		<repository>
+			<id>releases-public</id>
+			<name>Finalist public releases</name>
+			<url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+		</repository>
+	</distributionManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>releases-public</id>
-            <name>Finalist public releases</name>
-            <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
-        </repository>
-    </distributionManagement>
+	<repositories>
+		<repository>
+			<id>releases-public</id>
+			<name>Finalist public releases</name>
+			<url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+		</repository>
+	</repositories>
 
-    <repositories>
-        <repository>
-        <id>releases-public</id>
-        <name>Finalist public releases</name>
-        <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
-    </repository>
-    </repositories>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
 
-	 <licenses>
-		 <license>
-			 <name>Apache License, Version 2.0</name>
-			 <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			 <distribution>repo</distribution>
-			 <comments>A business-friendly OSS license</comments>
-		 </license>
-	 </licenses>
-
-    <modules>
-        <module>oidc-hook</module>
-        <module>oidc-lib</module>
-        <module>dxp-oidc-filter</module>
-    </modules>
+	<modules>
+		<module>oidc-hook</module>
+		<module>oidc-lib</module>
+		<module>dxp-oidc-filter</module>
+	</modules>
 </project>

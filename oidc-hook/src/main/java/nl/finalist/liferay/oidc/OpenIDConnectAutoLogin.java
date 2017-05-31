@@ -19,7 +19,7 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
 
     public OpenIDConnectAutoLogin() {
         super();
-        libAutologin = new LibAutoLogin(new Liferay62Adapter());
+        libAutologin = ProviderFactory.getOpenIdProvider(new Liferay62Adapter());
     }
 
     @Override
