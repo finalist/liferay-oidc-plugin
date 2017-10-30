@@ -9,6 +9,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
 import com.liferay.portal.kernel.security.auto.login.BaseAutoLogin;
 import com.liferay.portal.kernel.service.UserLocalService;
+
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +29,7 @@ public class OpenIDConnectAutoLogin extends BaseAutoLogin {
 
 	@Activate
 	void activate() {
-	    libAutologin = new LibAutoLogin(new Liferay70Adapter(_userLocalService));
+	    libAutologin = ProviderFactory.getOpenIdProvider(new Liferay70Adapter(_userLocalService));
 	}
 	
 	public OpenIDConnectAutoLogin() {
