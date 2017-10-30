@@ -33,7 +33,7 @@ public class LibFilter  {
      * Property that is used to configure whether to enable OpenID Connect auth
      */
     public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
-
+    
     public enum FilterResult {
     	CONTINUE_CHAIN, 
     	BREAK_CHAIN;
