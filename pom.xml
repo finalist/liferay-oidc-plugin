@@ -5,7 +5,7 @@
     <parent>
         <groupId>nl.iprofs.pom</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.24</version>
+        <version>2.0.25</version>
     </parent>
 
     <groupId>nl.finalist.liferay.oidc</groupId>
