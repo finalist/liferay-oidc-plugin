@@ -43,10 +43,13 @@ Non-working example for Google: `7kasuf1-123123adfaafdsflni7me2kr.apps.googleuse
 #### `openidconnect.secret`
 Secret of the client, after registration of the Liferay portal, just like the client-id.
 
-### `openidconnect.scope`
+#### `openidconnect.scope`
 Scope(s) of the access token (space separated), should be the same (or a subset) of the scopes allowed by the provider to the client. Default value: `openid profile email`
 
-### Complete copy-paste-friendly code block with all properties
+#### `openidconnect.provider` (Optional)
+Type of OpenID Connect provider. Supported values: `generic` (default), `azure`. For most Provider implementations, the generic provider works. For Azure, use the value `azure` as this makes slight changes to the fields sent as UserInfo.
+
+### Complete copy-paste-friendly code block with all required properties
 
 ~~~
 openidconnect.enableOpenIDConnect=true
