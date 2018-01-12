@@ -59,6 +59,21 @@ public class LibFilter  {
      * UserInfo endpoint
      */
     public final String PROFILE_URI;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_URI;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_PARAM;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_VALUE;
 
     /**
      * Name of the issuer, to be confirmed with the contents of the ID token
@@ -95,6 +110,9 @@ public class LibFilter  {
         TOKEN_LOCATION = liferay.getPortalProperty("openidconnect.token-location");
         SCOPE = liferay.getPortalProperty("openidconnect.scope", "openid profile email");
         PROFILE_URI = liferay.getPortalProperty("openidconnect.profile-uri");
+        SSO_LOGOUT_URI = liferay.getPortalProperty("openidconnect.sso-logout-uri", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
+        SSO_LOGOUT_PARAM = liferay.getPortalProperty("openidconnect.sso-logout-param", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
+        SSO_LOGOUT_VALUE = liferay.getPortalProperty("openidconnect.sso-logout-value", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
         USE_OPENID_CONNECT = liferay.getPortalProperty(PROPKEY_ENABLE_OPEN_IDCONNECT, false);
         ISSUER = liferay.getPortalProperty("openidconnect.issuer");
         CLIENT_ID = liferay.getPortalProperty("openidconnect.client-id");

@@ -9,5 +9,6 @@
     <servlet-filter-mapping>
         <servlet-filter-name>OpenID Connect SSO Filter</servlet-filter-name>
         <url-pattern>/c/portal/login</url-pattern>
+        <url-pattern>/c/portal/logout</url-pattern>
     </servlet-filter-mapping>
 </hook>
