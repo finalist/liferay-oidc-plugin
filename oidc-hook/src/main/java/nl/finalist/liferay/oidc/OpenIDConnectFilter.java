@@ -71,8 +71,8 @@ public class OpenIDConnectFilter extends BaseFilter {
 			if (pathInfo.contains("/portal/logout")) {
 				
 		        // Based on CAS Filter implementation:
-		        // If Portal Logout URL is requested, redirect to OIDC Logout resource instead to globally logout.
-		        // From there, the request should be redirected back to the Liferay Logout URL to locally logout.
+		        // If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
+		        // From there, the request should be redirected back to the Liferay portal home page.
 				
 				request.getSession().invalidate();
 
@@ -86,7 +86,7 @@ public class OpenIDConnectFilter extends BaseFilter {
 						logoutUrl = HttpUtil.setParameter(logoutUrl, logoutUrlParamName, logoutUrlParamValue);
 					}
 					
-					LOG.info("On " + request.getRequestURL() + " [" + pathInfo + "] redirect to logoutUrl: " + logoutUrl);
+					LOG.debug("On " + request.getRequestURL() + " [" + pathInfo + "] redirect to logoutUrl: " + logoutUrl);
 					try {
 						response.sendRedirect(logoutUrl);
 					} catch (IOException e) {
@@ -94,7 +94,7 @@ public class OpenIDConnectFilter extends BaseFilter {
 					}
 					return;
 				} else {
-					LOG.info("On " + request.getRequestURL() + " [" + pathInfo + "] DO NOT redirect. -- logoutUrl: " + logoutUrl);
+					LOG.debug("On " + request.getRequestURL() + " [" + pathInfo + "] DO NOT redirect. -- logoutUrl: " + logoutUrl);
 				}
 				
 			}
