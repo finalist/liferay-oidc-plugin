@@ -32,9 +32,9 @@ Complete url to the OpenID Connect Provider's token location. Example for Google
 #### `openidconnect.profile-uri`
 Complete URL to the 'user info' endpoint. Example for Google: `https://www.googleapis.com/plus/v1/people/me/openIdConnect`
 
-#### `openidconnect.sso-logout-uri`
-#### `openidconnect.sso-logout-param`
-#### `openidconnect.sso-logout-value`
+#### `openidconnect.sso-logout-uri` (Optional)
+#### `openidconnect.sso-logout-param` (Optional)
+#### `openidconnect.sso-logout-value` (Optional)
 Complete URL to the 'SSO logout' endpoint. Ignored if empty.
 After redirection to the given URL, the OpenID Connect Provider should redirect to the Lifery Portal home page (or another public after-logout-resource).
 This target may be included in this URL as a URL parameter or may be configured for the OpenID Connect Provider.
