@@ -10,7 +10,7 @@
 
     <groupId>nl.finalist.liferay.oidc</groupId>
     <artifactId>oidc-parent</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.4.0</version>
     <packaging>pom</packaging>
 
     <name>OpenID Connect Liferay plugin parent</name>
@@ -25,7 +25,7 @@
         <url>http://github.com/finalist/liferay-oidc-plugin</url>
         <connection>scm:git:git://github.com/finalist/liferay-oidc-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/finalist/liferay-oidc-plugin.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>oidc-parent-0.4.0</tag>
     </scm>
 
     <properties>
