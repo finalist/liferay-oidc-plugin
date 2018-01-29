@@ -34,10 +34,16 @@ public class OpenIDConnectFilter extends BaseFilter {
     }
 
     /**
-     * Filter the request. The first time this filter gets hit, it will redirect to the OP.
+     * Filter the request. 
+     * <br><br>LOGIN:<br> 
+     * The first time this filter gets hit, it will redirect to the OP.
      * Second time it will expect a code and state param to be set, and will exchange the code for an access token.
      * Then it will request the UserInfo given the access token.
+     * <br>--
      * Result: the OpenID Connect 1.0 flow.
+     * <br><br>LOGOUT:<br>
+     * When the filter is hit and according values for SSO logout are set, it will redirect to the OP logout resource.
+     * From there the request should be redirected "back" to a public portal page or the public portal home page. 
      *
      * @param request the http request
      * @param response the http response

@@ -32,6 +32,13 @@ Complete url to the OpenID Connect Provider's token location. Example for Google
 #### `openidconnect.profile-uri`
 Complete URL to the 'user info' endpoint. Example for Google: `https://www.googleapis.com/plus/v1/people/me/openIdConnect`
 
+#### `openidconnect.sso-logout-uri` (Optional)
+#### `openidconnect.sso-logout-param` (Optional)
+#### `openidconnect.sso-logout-value` (Optional)
+Complete URL to the 'SSO logout' endpoint. Ignored if empty.
+After redirection to the given URL, the OpenID Connect Provider should redirect to the Lifery Portal home page (or another public after-logout-resource).
+This target may be included in this URL as a URL parameter or may be configured for the OpenID Connect Provider.
+
 #### `openidconnect.issuer`
 The information retrieved from the user info endpoint has to be verified against a preconfigured string, according to the OpenID Connect spec.
 This 'issuer' claim is used for that. Example for Google: `https://accounts.google.com`
@@ -56,6 +63,9 @@ openidconnect.enableOpenIDConnect=true
 openidconnect.token-location=https://www.googleapis.com/oauth2/v4/token
 openidconnect.authorization-location=https://accounts.google.com/o/oauth2/v2/auth
 openidconnect.profile-uri=https://www.googleapis.com/plus/v1/people/me/openIdConnect
+openidconnect.sso-logout-uri=https://accounts.google.com/o/oauth2/v2/logout
+openidconnect.sso-logout-param=redirect_url
+openidconnect.sso-logout-value=http://www.liferay.com
 openidconnect.issuer=https://accounts.google.com
 openidconnect.client-id=7kasuf1-123123adfaafdsflni7me2kr.apps.googleusercontent.com
 openidconnect.secret=xyz

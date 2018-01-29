@@ -1,6 +1,9 @@
 package nl.finalist.liferay.oidc;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.FilterChain;
@@ -59,6 +62,21 @@ public class LibFilter  {
      * UserInfo endpoint
      */
     public final String PROFILE_URI;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_URI;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_PARAM;
+    
+    /**
+     * SSO logout endpoint (of offered)
+     */
+    public final String SSO_LOGOUT_VALUE;
 
     /**
      * Name of the issuer, to be confirmed with the contents of the ID token
@@ -95,6 +113,9 @@ public class LibFilter  {
         TOKEN_LOCATION = liferay.getPortalProperty("openidconnect.token-location");
         SCOPE = liferay.getPortalProperty("openidconnect.scope", "openid profile email");
         PROFILE_URI = liferay.getPortalProperty("openidconnect.profile-uri");
+        SSO_LOGOUT_URI = liferay.getPortalProperty("openidconnect.sso-logout-uri", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
+        SSO_LOGOUT_PARAM = liferay.getPortalProperty("openidconnect.sso-logout-param", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
+        SSO_LOGOUT_VALUE = liferay.getPortalProperty("openidconnect.sso-logout-value", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
         USE_OPENID_CONNECT = liferay.getPortalProperty(PROPKEY_ENABLE_OPEN_IDCONNECT, false);
         ISSUER = liferay.getPortalProperty("openidconnect.issuer");
         CLIENT_ID = liferay.getPortalProperty("openidconnect.client-id");
@@ -103,10 +124,16 @@ public class LibFilter  {
 
 
     /**
-     * Filter the request. The first time this filter gets hit, it will redirect to the OP.
+     * Filter the request. 
+     * <br><br>LOGIN:<br> 
+     * The first time this filter gets hit, it will redirect to the OP.
      * Second time it will expect a code and state param to be set, and will exchange the code for an access token.
      * Then it will request the UserInfo given the access token.
+     * <br>--
      * Result: the OpenID Connect 1.0 flow.
+     * <br><br>LOGOUT:<br>
+     * When the filter is hit and according values for SSO logout are set, it will redirect to the OP logout resource.
+     * From there the request should be redirected "back" to a public portal page or the public portal home page. 
      *
      * @param request the http request
      * @param response the http response
@@ -124,23 +151,46 @@ public class LibFilter  {
 
         liferay.trace("In processFilter()...");
 
-        if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
-                && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+		String pathInfo = request.getPathInfo();
 
-            if (!isUserLoggedIn(request)) {
-                liferay.trace("About to exchange code for access token");
-                exchangeCodeForAccessToken(request);
-            } else {
-                liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
-                        "Will not exchange code for token twice.");
-            }
-            // continue chain
-            return FilterResult.CONTINUE_CHAIN;
-        } else {
-            liferay.trace("About to redirect to OpenID Provider");
-            redirectToLogin(request, response, CLIENT_ID);
-            // no continuation of the filter chain; we expect the redirect to commence.
-            return FilterResult.BREAK_CHAIN;        }
+		if (null != pathInfo) {
+			if (pathInfo.contains("/portal/login")) {
+		        if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
+		                && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+
+		            if (!isUserLoggedIn(request)) {
+		                // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
+		                liferay.trace("About to exchange code for access token");
+		                exchangeCodeForAccessToken(request);
+		            } else {
+		                liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
+		                        "Will not exchange code for token twice.");
+		            }
+		        } else {
+		        	// LOGIN: The first time this filter gets hit, it will redirect to the OP.
+		            liferay.trace("About to redirect to OpenID Provider");
+		            redirectToLogin(request, response, CLIENT_ID);
+		            // no continuation of the filter chain; we expect the redirect to commence.
+		            return FilterResult.BREAK_CHAIN;
+		        }
+			} 
+			else
+			if (pathInfo.contains("/portal/logout")) {
+				if (null != SSO_LOGOUT_URI && SSO_LOGOUT_URI.length() > 0 && isUserLoggedIn(request)) {
+					
+					liferay.trace("About to logout from SSO by redirect to " + SSO_LOGOUT_URI);
+			        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
+			        // From there, the request should be redirected back to the Liferay portal home page.
+					request.getSession().invalidate();
+					redirectToLogout(request, response, SSO_LOGOUT_URI, SSO_LOGOUT_PARAM, SSO_LOGOUT_VALUE);
+		            // no continuation of the filter chain; we expect the redirect to commence.
+		            return FilterResult.BREAK_CHAIN;
+				}
+			}
+		}
+        // continue chain
+		return FilterResult.CONTINUE_CHAIN;
+
     }
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {
@@ -206,8 +256,19 @@ public class LibFilter  {
             liferay.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());
             response.sendRedirect(oAuthRequest.getLocationUri());
         } catch (OAuthSystemException e) {
-            throw new IOException("While redirecting to OP", e);
+            throw new IOException("While redirecting to OP for SSO login", e);
         }
+    }
+    
+    protected void redirectToLogout(HttpServletRequest request, HttpServletResponse response, 
+    		String logoutUrl, String logoutUrlParamName, String logoutUrlParamValue) throws
+    		IOException {
+			// build logout URL and append params if present
+			if (StringUtils.isNotEmpty(logoutUrlParamName) && StringUtils.isNotEmpty(logoutUrlParamValue)) {
+				logoutUrl = addParameter(logoutUrl, logoutUrlParamName, logoutUrlParamValue);
+			}
+			liferay.debug("On " + request.getRequestURL() + " redirect to OP for SSO logout: " + logoutUrl);
+			response.sendRedirect(logoutUrl);
     }
 
     protected String getRedirectUri(HttpServletRequest request) {
@@ -224,5 +285,32 @@ public class LibFilter  {
         return liferay.isUserLoggedIn(request);
     }
 
+    protected String addParameter(String url, String param, String value) {
+    	String anchor = "";
+    	int posOfAnchor = url.indexOf('#');
+    	if (posOfAnchor > -1) {
+    		anchor = url.substring(posOfAnchor);
+    		url = url.substring(0, posOfAnchor);
+    	}
+    	
+		StringBuffer sb = new StringBuffer();
+		sb.append(url);
+		if (url.indexOf('?') < 0) {
+			sb.append('?');
+		} else 
+		if (!url.endsWith("?") && !url.endsWith("&")) {
+			sb.append('&');
+		}
+		sb.append(param);
+		sb.append('=');
+		try {
+			sb.append(URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+		} catch (UnsupportedEncodingException e) {
+			sb.append(value);
+		}
+		sb.append(anchor);
+
+    	return sb.toString() + anchor;
+    }
 
 }
