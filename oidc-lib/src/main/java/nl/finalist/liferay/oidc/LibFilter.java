@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -245,6 +246,16 @@ public class LibFilter  {
     protected void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String clientId) throws
             IOException {
         try {
+    		String servletPath = request.getServletPath();
+    		Locale locale = request.getLocale();
+    		
+    		String ui_locales = servletPath.substring(1); // may be /c (default locale, useless) or /en (requested locale, useful) or /xy (useful) ...
+    		if (ui_locales.length() < 2) { // skip values being too short to meet https://tools.ietf.org/html/rfc5646
+    			// TODO: Improve locale recognition according to syntax given in RFC-5646
+    			ui_locales = locale.getLanguage();
+    		}
+    		liferay.trace("redirectToLogin: ui_locales: " + ui_locales);
+    		
             OAuthClientRequest oAuthRequest = OAuthClientRequest
                     .authorizationLocation(AUTHORIZATION_LOCATION)
                     .setClientId(clientId)
@@ -252,6 +263,7 @@ public class LibFilter  {
                     .setResponseType("code")
                     .setScope(SCOPE)
                     .setState(generateStateParam(request))
+                    .setParameter("ui_locales", ui_locales) // see http://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
                     .buildQueryMessage();
             liferay.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());
             response.sendRedirect(oAuthRequest.getLocationUri());
