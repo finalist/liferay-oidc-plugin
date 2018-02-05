@@ -24,8 +24,7 @@ import nl.finalist.liferay.oidc.LibFilter.FilterResult;
                 "dispatcher=REQUEST",
                 "servlet-context-name=",
                 "servlet-filter-name=SSO OpenID Connect Filter",
-                "url-pattern=/c/portal/login",
-                "url-pattern=/c/portal/logout"
+                "url-pattern=/*"
         },
         service = Filter.class
 )
