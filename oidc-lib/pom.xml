@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>oidc-parent</artifactId>
 		<groupId>nl.finalist.liferay.oidc</groupId>
-		<version>0.5.0</version>
+		<version>0.5.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
     <name>OpenID Connect generic library</name>
