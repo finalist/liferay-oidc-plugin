@@ -1,8 +1,6 @@
 Bundle-Name: OIDC Filter
 Bundle-SymbolicName: nl.finalist.liferay.oidc
 
-Bundle-Version: 1.0.0.${tstamp}
-
 # Let a configuration xml file be generated from the configuration interfaces
 -metatype: *
 

@@ -1,11 +1,10 @@
 Bundle-Name: OIDC Portal Settings Web
 Bundle-SymbolicName: nl.finalist.liferay.oidc.portalsettings
-Bundle-Version: 1.0.0.${tstamp}
+
 Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Portal Settings
 Web-ContextPath: /dxp-oidc-portalsettings-web
 
-  
 -jsp: *.jsp,*.jspf
 -plugin.bundle: com.liferay.ant.bnd.resource.bundle.ResourceBundleLoaderAnalyzerPlugin
 -plugin.jsp: com.liferay.ant.bnd.jsp.JspAnalyzerPlugin
