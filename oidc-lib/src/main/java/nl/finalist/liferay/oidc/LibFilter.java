@@ -1,16 +1,18 @@
 package nl.finalist.liferay.oidc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -48,78 +50,11 @@ public class LibFilter  {
      */
     public static final String OPENID_CONNECT_SESSION_ATTR = "OpenIDConnectUserInfo";
 
-    /**
-     * Location of the authorization service (request token)
-     */
-    public final String AUTHORIZATION_LOCATION;
-    
-    /**
-     * Location of the token service (exchange code for token)
-     */
-    public final String TOKEN_LOCATION;
-
-    /**
-     * UserInfo endpoint
-     */
-    public final String PROFILE_URI;
-    
-    /**
-     * SSO logout endpoint (of offered)
-     */
-    public final String SSO_LOGOUT_URI;
-    
-    /**
-     * SSO logout endpoint (of offered)
-     */
-    public final String SSO_LOGOUT_PARAM;
-    
-    /**
-     * SSO logout endpoint (of offered)
-     */
-    public final String SSO_LOGOUT_VALUE;
-
-    /**
-     * Name of the issuer, to be confirmed with the contents of the ID token
-     */
-    public final String ISSUER;
-
-    /**
-     * OAuth client id.
-     */
-    private final String CLIENT_ID;
-
-    /**
-     * OAuth client secret.
-     */
-    private final String SECRET;
-
-    /**
-     * Scope of access token to request from OIDC Provider
-     */
-    private final String SCOPE;
-
-    /**
-     * Whether this OpenID Connect filter/autologin is enabled or not.
-     */
-    public final boolean USE_OPENID_CONNECT;
-
+  
     private final LiferayAdapter liferay;
 
     public LibFilter(LiferayAdapter liferay) {
         this.liferay = liferay;
-
-
-        AUTHORIZATION_LOCATION = liferay.getPortalProperty("openidconnect.authorization-location");
-        TOKEN_LOCATION = liferay.getPortalProperty("openidconnect.token-location");
-        SCOPE = liferay.getPortalProperty("openidconnect.scope", "openid profile email");
-        PROFILE_URI = liferay.getPortalProperty("openidconnect.profile-uri");
-        SSO_LOGOUT_URI = liferay.getPortalProperty("openidconnect.sso-logout-uri", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
-        SSO_LOGOUT_PARAM = liferay.getPortalProperty("openidconnect.sso-logout-param", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
-        SSO_LOGOUT_VALUE = liferay.getPortalProperty("openidconnect.sso-logout-value", ""); // Important: Do not use NULL as default value since this would cause a NPE deep down!
-        USE_OPENID_CONNECT = liferay.getPortalProperty(PROPKEY_ENABLE_OPEN_IDCONNECT, false);
-        ISSUER = liferay.getPortalProperty("openidconnect.issuer");
-        CLIENT_ID = liferay.getPortalProperty("openidconnect.client-id");
-        SECRET = liferay.getPortalProperty("openidconnect.secret");
     }
 
 
@@ -143,9 +78,12 @@ public class LibFilter  {
      */
     protected FilterResult processFilter(HttpServletRequest request, HttpServletResponse response, FilterChain 
             filterChain) throws Exception {
+
+        OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
+
         // If the plugin is not enabled, short circuit immediately
-        if (!USE_OPENID_CONNECT) {
-            liferay.trace("OpenIDConnectFilter deployed, altough not activated. Will skip it.");
+        if (!oidcConfiguration.isEnabled()) {
+            liferay.trace("OpenIDConnectFilter not enabled for this virtual instance. Will skip it.");
             return FilterResult.CONTINUE_CHAIN;
         }
 
@@ -169,20 +107,24 @@ public class LibFilter  {
 		        } else {
 		        	// LOGIN: The first time this filter gets hit, it will redirect to the OP.
 		            liferay.trace("About to redirect to OpenID Provider");
-		            redirectToLogin(request, response, CLIENT_ID);
+		            redirectToLogin(request, response, oidcConfiguration.clientId());
 		            // no continuation of the filter chain; we expect the redirect to commence.
 		            return FilterResult.BREAK_CHAIN;
 		        }
 			} 
 			else
 			if (pathInfo.contains("/portal/logout")) {
-				if (null != SSO_LOGOUT_URI && SSO_LOGOUT_URI.length() > 0 && isUserLoggedIn(request)) {
+                final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
+                final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
+                final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
+                if (null != ssoLogoutUri && ssoLogoutUri.length
+                    () > 0 && isUserLoggedIn(request)) {
 					
-					liferay.trace("About to logout from SSO by redirect to " + SSO_LOGOUT_URI);
+					liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
 			        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
 			        // From there, the request should be redirected back to the Liferay portal home page.
 					request.getSession().invalidate();
-					redirectToLogout(request, response, SSO_LOGOUT_URI, SSO_LOGOUT_PARAM, SSO_LOGOUT_VALUE);
+					redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
 		            // no continuation of the filter chain; we expect the redirect to commence.
 		            return FilterResult.BREAK_CHAIN;
 				}
@@ -194,6 +136,8 @@ public class LibFilter  {
     }
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {
+        OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
+
         try {
             String codeParam = request.getParameter(REQ_PARAM_CODE);
             String stateParam = request.getParameter(REQ_PARAM_STATE);
@@ -205,10 +149,10 @@ public class LibFilter  {
                 throw new IOException("Invalid state parameter");
             }
 
-            OAuthClientRequest tokenRequest = OAuthClientRequest.tokenLocation(TOKEN_LOCATION)
+            OAuthClientRequest tokenRequest = OAuthClientRequest.tokenLocation(oidcConfiguration.tokenLocation())
                     .setGrantType(GrantType.AUTHORIZATION_CODE)
-                    .setClientId(CLIENT_ID)
-                    .setClientSecret(SECRET)
+                    .setClientId(oidcConfiguration.clientId())
+                    .setClientSecret(oidcConfiguration.secret())
                     .setCode(codeParam)
                     .setRedirectURI(getRedirectUri(request))
                     .buildBodyMessage();
@@ -219,13 +163,13 @@ public class LibFilter  {
 
             String accessToken = oAuthResponse.getAccessToken();
 
-            if (!oAuthResponse.checkId(ISSUER, CLIENT_ID)) {
+            if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
                 liferay.warn("The token was not valid: " + oAuthResponse.toString());
                 return;
             }
 
             // The only API to be enabled (in case of Google) is Google+.
-            OAuthClientRequest userInfoRequest = new OAuthBearerClientRequest(PROFILE_URI)
+            OAuthClientRequest userInfoRequest = new OAuthBearerClientRequest(oidcConfiguration.profileUri())
                     .setAccessToken(accessToken).buildHeaderMessage();
             liferay.trace("UserInfo request to uri: " + userInfoRequest.getLocationUri());
             OAuthResourceResponse userInfoResponse =
@@ -244,13 +188,15 @@ public class LibFilter  {
 
     protected void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String clientId) throws
             IOException {
+        OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
+
         try {
             OAuthClientRequest oAuthRequest = OAuthClientRequest
-                    .authorizationLocation(AUTHORIZATION_LOCATION)
+                    .authorizationLocation(oidcConfiguration.authorizationLocation())
                     .setClientId(clientId)
                     .setRedirectURI(getRedirectUri(request))
                     .setResponseType("code")
-                    .setScope(SCOPE)
+                    .setScope(oidcConfiguration.scope())
                     .setState(generateStateParam(request))
                     .buildQueryMessage();
             liferay.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());

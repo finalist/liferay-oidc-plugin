@@ -1,22 +1,25 @@
 package nl.finalist.liferay.oidc;
 
-import java.util.Calendar;
-import java.util.Locale;
-import javax.servlet.http.HttpServletRequest;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringPool;
+
+import java.util.Calendar;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
 
 
 public class Liferay70Adapter implements LiferayAdapter {
@@ -24,27 +27,23 @@ public class Liferay70Adapter implements LiferayAdapter {
     private static final Log LOG = LogFactoryUtil.getLog(Liferay70Adapter.class);
 
     private UserLocalService userLocalService;
+    private ConfigurationProvider configurationProvider;
 
-    
-    public Liferay70Adapter(UserLocalService userLocalService) {
+
+    public Liferay70Adapter(UserLocalService userLocalService, ConfigurationProvider
+        configurationProvider) {
 		this.userLocalService = userLocalService;
-	}
-
-	@Override
-    public String getPortalProperty(String propertyKey) {
-        return PropsUtil.get(propertyKey);
+        this.configurationProvider = configurationProvider;
     }
 
-    @Override
-    public String getPortalProperty(String propertyKey, String defaultString) {
-        return GetterUtil.getString(PropsUtil.get(propertyKey), defaultString);
+    public OIDCConfiguration getOIDCConfiguration(long companyId) {
+        try {
+            return configurationProvider.getCompanyConfiguration(OpenIDConnectOCDConfiguration.class, companyId);
+        } catch (ConfigurationException e) {
+            throw new SystemException(e);
+        }
     }
-
-    @Override
-    public boolean getPortalProperty(String propertyKey, boolean defaultBoolean) {
-        return GetterUtil.getBoolean(PropsUtil.get(propertyKey), defaultBoolean);
-    }
-
+    
     @Override
     public void trace(String s) {
         LOG.trace(s);

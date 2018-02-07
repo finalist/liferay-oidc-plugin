@@ -10,7 +10,7 @@
 
     <artifactId>oidc-hook</artifactId>
     <packaging>war</packaging>
-    <name>OpenID Connect SSO Hook</name>
+    <name>OpenID Connect 6.2 SSO Hook</name>
 
     <build>
         <plugins>

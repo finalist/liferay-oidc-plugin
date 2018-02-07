@@ -1,25 +1,20 @@
 package nl.finalist.liferay.oidc;
 
+import com.liferay.portal.security.auth.BaseAutoLogin;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.security.auth.BaseAutoLogin;
 
 /**
  * @see LibAutoLogin
  */
 public class OpenIDConnectAutoLogin extends BaseAutoLogin {
 
-    private static final Log LOG = LogFactoryUtil.getLog(OpenIDConnectAutoLogin.class);
-
-
     private LibAutoLogin libAutologin;
 
     public OpenIDConnectAutoLogin() {
         super();
-        libAutologin = ProviderFactory.getOpenIdProvider(new Liferay62Adapter());
+        libAutologin = new LibAutoLogin(new Liferay62Adapter());
     }
 
     @Override

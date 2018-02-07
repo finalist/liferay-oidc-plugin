@@ -5,7 +5,7 @@
     <parent>
         <groupId>nl.iprofs.pom</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.25</version>
+        <version>2.0.27</version>
     </parent>
 
     <groupId>nl.finalist.liferay.oidc</groupId>
@@ -32,10 +32,10 @@
         <!-- Version properties -->
         <liferay-dependency.version>6.2.5</liferay-dependency.version>
         <liferay-maven-plugin.version>6.2.10.15</liferay-maven-plugin.version>
-        <java.version>1.7</java.version>
+        <java.version>1.8</java.version>
 
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- Ignore Mock services in Sonarqube's reports -->
         <sonar.exclusions>**/Mock**.java</sonar.exclusions>
@@ -108,7 +108,7 @@
         <repository>
             <id>releases-public</id>
             <name>Finalist public releases</name>
-            <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+            <url>https://www.intranet.finalist.com/nexus/content/repositories/releases-public</url>
         </repository>
     </distributionManagement>
 
@@ -116,7 +116,11 @@
         <repository>
         <id>releases-public</id>
         <name>Finalist public releases</name>
-        <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+        <url>https://www.intranet.finalist.com/nexus/content/repositories/releases-public</url>
+    </repository>
+    <repository>
+        <id>liferay-public</id>
+        <url>https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public/</url>
     </repository>
     </repositories>
 
@@ -133,5 +137,6 @@
         <module>oidc-hook</module>
         <module>oidc-lib</module>
         <module>dxp-oidc-filter</module>
-    </modules>
+        <module>dxp-oidc-portalsettings-web</module>
+  </modules>
 </project>

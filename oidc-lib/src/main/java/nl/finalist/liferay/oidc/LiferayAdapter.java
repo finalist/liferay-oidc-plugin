@@ -5,10 +5,8 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface LiferayAdapter {
 
-    String getPortalProperty(String propertyKey);
-    String getPortalProperty(String propertyKey, String defaultString);
-    boolean getPortalProperty(String propertyKey, boolean defaultBoolean);
-
+    OIDCConfiguration getOIDCConfiguration(long companyId);
+    
     void trace(String s);
     void info(String s);
     void debug(String s);
@@ -25,7 +23,7 @@ public interface LiferayAdapter {
      * Create user or update if already existing. Keys to base existance on are: companyId, emailAddress.
      * GivenName and familyName are used for setting the according fields.
      *
-     * @param companyId the portal instance id
+     * @param companyId the virtual instance id
      * @param emailAddress the email address of the Liferay user
      * @param firstName the first name of the Liferay user
      * @param lastName last name of the Liferay user

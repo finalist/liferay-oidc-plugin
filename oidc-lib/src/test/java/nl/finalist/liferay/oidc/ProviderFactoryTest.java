@@ -1,63 +1,43 @@
 package nl.finalist.liferay.oidc;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import org.junit.Test;
 
 import nl.finalist.liferay.oidc.providers.AzureAD;
-import nl.finalist.liferay.oidc.providers.GenericProvider;
+import nl.finalist.liferay.oidc.providers.UserInfoProvider;
+
+import static org.junit.Assert.assertTrue;
 
 public class ProviderFactoryTest {
-	private static final String PROPKEY_PROVIDER = "openidconnect.provider";
-
 
 	@Test
 	public void testFactoryGenericProvider() {
-		LiferayAdapter liferay = mockLiferayAdapterForProvider("none");
-		LibAutoLogin openIdProvider = ProviderFactory.getOpenIdProvider(liferay);
-		
-		assertTrue(openIdProvider instanceof GenericProvider);
+		UserInfoProvider openIdProvider = ProviderFactory.getOpenIdProvider("none");
+		assertTrue(openIdProvider.getClass() == UserInfoProvider.class);
 	}
 	
 	@Test
 	public void testFactoryGenericMatchProvider() {
-		LiferayAdapter liferay = mockLiferayAdapterForProvider("GENERIC");
-		LibAutoLogin openIdProvider = ProviderFactory.getOpenIdProvider(liferay);
-		
-		assertTrue(openIdProvider instanceof GenericProvider);
+		UserInfoProvider openIdProvider = ProviderFactory.getOpenIdProvider("GENERIC");
+		assertTrue(openIdProvider.getClass() == UserInfoProvider.class);
 	}
 	
 	@Test
 	public void testFactoryGenericEmptyProvider() {
-		LiferayAdapter liferay = mockLiferayAdapterForProvider("");
-		LibAutoLogin openIdProvider = ProviderFactory.getOpenIdProvider(liferay);
-		
-		assertTrue(openIdProvider instanceof GenericProvider);
+		UserInfoProvider openIdProvider = ProviderFactory.getOpenIdProvider("");
+		assertTrue(openIdProvider.getClass() == UserInfoProvider.class);
 	}
 	
 	
 	@Test
 	public void testFactoryAzureMatchProvider() {
-		LiferayAdapter liferay = mockLiferayAdapterForProvider("AZURE");
-		LibAutoLogin openIdProvider = ProviderFactory.getOpenIdProvider(liferay);
-		
+		UserInfoProvider openIdProvider = ProviderFactory.getOpenIdProvider("AZURE");
 		assertTrue(openIdProvider instanceof AzureAD);
 	}
 	
 	@Test
 	public void testFactoryAzureCaseNotMatchProvider() {
-		LiferayAdapter liferay = mockLiferayAdapterForProvider("azure");
-		LibAutoLogin openIdProvider = ProviderFactory.getOpenIdProvider(liferay);
-		
+		UserInfoProvider openIdProvider = ProviderFactory.getOpenIdProvider("azure");
 		assertTrue(openIdProvider instanceof AzureAD);
 	}
-	
-	private LiferayAdapter mockLiferayAdapterForProvider(String provider) {
-		LiferayAdapter liferay = mock(LiferayAdapter.class);
-		when(liferay.getPortalProperty(PROPKEY_PROVIDER, "")).thenReturn(provider);
-		
-		return liferay;
-	}
+
 }

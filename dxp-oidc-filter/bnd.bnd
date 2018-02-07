@@ -1,15 +1,12 @@
+Bundle-Name: OIDC Filter
 Bundle-SymbolicName: nl.finalist.liferay.oidc
 
 Bundle-Version: 1.0.0.${tstamp}
 
-Import-Package: \
-	org.osgi.framework;version="[1.7,2)",\
-	*
+# Let a configuration xml file be generated from the configuration interfaces
+-metatype: *
 
-Private-Package: \
-	nl.finalist.liferay.oidc
-
-
+Export-Package: nl.finalist.liferay.oidc,nl.finalist.liferay.oidc.configuration
 
 -includeresource:\
   @oidc-lib-${project.version}.jar,\

@@ -1,16 +1,10 @@
 package nl.finalist.liferay.oidc;
 
-import java.util.Calendar;
-import java.util.Locale;
-import javax.servlet.http.HttpServletRequest;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.ServiceContext;
@@ -18,23 +12,18 @@ import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.PwdGenerator;
 
+import java.util.Calendar;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
 public class Liferay62Adapter implements LiferayAdapter {
 
     private static final Log LOG = LogFactoryUtil.getLog(Liferay62Adapter.class);
 
     @Override
-    public String getPortalProperty(String propertyKey) {
-        return PropsUtil.get(propertyKey);
-    }
-
-    @Override
-    public String getPortalProperty(String propertyKey, String defaultString) {
-        return GetterUtil.getString(PropsUtil.get(propertyKey), defaultString);
-    }
-
-    @Override
-    public boolean getPortalProperty(String propertyKey, boolean defaultBoolean) {
-        return GetterUtil.getBoolean(PropsUtil.get(propertyKey), defaultBoolean);
+    public OIDCConfiguration getOIDCConfiguration(long companyId) {
+        return new OpenIDConnectPortalPropsConfiguration(companyId);
     }
 
     @Override
