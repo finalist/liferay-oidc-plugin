@@ -20,7 +20,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
     immediate = true,
-    service = AutoLogin.class
+    service = AutoLogin.class,
     configurationPid = "nl.finalist.liferay.oidc.OpenIDConnectOCDConfiguration"
 )
 public class OpenIDConnectAutoLogin extends BaseAutoLogin {
