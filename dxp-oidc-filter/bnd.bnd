@@ -1,6 +1,7 @@
 Bundle-Name: OIDC Filter
 Bundle-SymbolicName: nl.finalist.liferay.oidc
-
+Liferay-Releng-Module-Group-Description: OpenID Connect plugin by Finalist
+Liferay-Releng-Module-Group-Title: OpenID Connect
 # Let a configuration xml file be generated from the configuration interfaces
 -metatype: *
 

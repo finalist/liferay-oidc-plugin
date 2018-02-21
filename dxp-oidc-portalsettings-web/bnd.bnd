@@ -1,8 +1,7 @@
 Bundle-Name: OIDC Portal Settings Web
 Bundle-SymbolicName: nl.finalist.liferay.oidc.portalsettings
-
-Liferay-Releng-Module-Group-Description:
-Liferay-Releng-Module-Group-Title: Portal Settings
+Liferay-Releng-Module-Group-Description: OpenID Connect plugin by Finalist
+Liferay-Releng-Module-Group-Title: OpenID Connect
 Web-ContextPath: /dxp-oidc-portalsettings-web
 
 -jsp: *.jsp,*.jspf
