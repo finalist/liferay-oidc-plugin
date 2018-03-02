@@ -118,7 +118,7 @@ public class OpenIDConnectPortalPropsConfiguration implements OIDCConfiguration 
     @Override
     public String providerType() {
         try {
-            return PrefsPropsUtil.getString("openidconnect.provider");
+            return PrefsPropsUtil.getString("openidconnect.provider", "generic");
         } catch (SystemException e) {
             throw new RuntimeException(e);
         }
