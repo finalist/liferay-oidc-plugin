@@ -160,7 +160,7 @@ public class LibFilter  {
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
-            liferay.debug("Access/id token response: " + oAuthResponse);
+            liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
 
             if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
