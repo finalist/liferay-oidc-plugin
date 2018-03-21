@@ -2,4 +2,6 @@ language: java
 jdk:
   - oraclejdk8
 install: true
-script: mvn clean install
+script: mvn clean install cobertura:cobertura
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t f365284a-5071-43dc-8ffa-099561418f77
