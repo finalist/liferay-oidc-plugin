@@ -24,7 +24,7 @@ Configuration differs between 6.2 and DXP/7.0+.
 
 Configuration is driven by Liferay 7.0 Configuration API and can be edited via the control panel in a new tab, in Instance Settings -> Authentication -> OpenID Connect 
 
-![Instance Settings](doc/instance settings.png)
+![Instance Settings](doc/instance-settings.png)
 
 Each _virtual portal instance_ can have its own configuration.
 
