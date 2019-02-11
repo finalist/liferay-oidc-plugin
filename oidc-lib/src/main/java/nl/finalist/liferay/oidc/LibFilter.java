@@ -251,20 +251,22 @@ public class LibFilter  {
         	String ui_locales = null;
         	
     		Cookie[] cookies = request.getCookies(); // look for GUEST_LANGUAGE_ID
-    		for (Cookie cookie : cookies) {
-    			liferay.trace("redirectToLogin: cookie: " + cookie.getName() + " = " + cookie.getValue());
-    			if ("GUEST_LANGUAGE_ID".equals(cookie.getName())) {
-    				String guestLanguageId = cookie.getValue();
-    				String[] guestLocale = guestLanguageId.split("_");
-    				ui_locales = guestLanguageId; // full locale, just as-is: 3-zone OR 2-zone OR 1-zone locale
-    				if (guestLocale.length > 2) { // we got 3-zone locale: language_COUNTRY_REGION: Add "langauge_COUNTRY"
-    					ui_locales += " " + guestLocale[0] + "_" + guestLocale[1];
-    				}
-    				if (guestLocale.length > 1) { // we got (3- or) 2-zone locale: language_COUNTRY: Add "language"
-    					ui_locales += " " + guestLocale[0];
-    				}
-        			liferay.trace("redirectToLogin: use for ui_locales: " + ui_locales);
-    			}
+    		if (null != cookies) {
+        		for (Cookie cookie : cookies) {
+        			liferay.trace("redirectToLogin: cookie: " + cookie.getName() + " = " + cookie.getValue());
+        			if ("GUEST_LANGUAGE_ID".equals(cookie.getName())) {
+        				String guestLanguageId = cookie.getValue();
+        				String[] guestLocale = guestLanguageId.split("_");
+        				ui_locales = guestLanguageId; // full locale, just as-is: 3-zone OR 2-zone OR 1-zone locale
+        				if (guestLocale.length > 2) { // we got 3-zone locale: language_COUNTRY_REGION: Add "langauge_COUNTRY"
+        					ui_locales += " " + guestLocale[0] + "_" + guestLocale[1];
+        				}
+        				if (guestLocale.length > 1) { // we got (3- or) 2-zone locale: language_COUNTRY: Add "language"
+        					ui_locales += " " + guestLocale[0];
+        				}
+            			liferay.trace("redirectToLogin: use for ui_locales: " + ui_locales);
+        			}
+        		}
     		}
     		
     		if (null == ui_locales) { // no GUEST_LANGUAGE_ID cookie available:
