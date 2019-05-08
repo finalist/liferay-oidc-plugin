@@ -6,8 +6,14 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +30,7 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.json.JSONObject;
 
 /**
  * Servlet filter that initiates OpenID Connect logins, and handles the resulting flow, until and including the
@@ -160,6 +167,12 @@ public class LibFilter  {
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
+
+            Set<Map.Entry<String, Object>> customFields = oAuthResponse.getIdToken().getClaimsSet().getCustomFields();
+
+            List<String> roles = getRolesOfUser(customFields);
+
+
             liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
 
@@ -184,6 +197,34 @@ public class LibFilter  {
         } catch (OAuthSystemException | OAuthProblemException e) {
             throw new IOException("While exchanging code for access token and retrieving user info", e);
         }
+    }
+
+    protected static List<String> getRolesOfUser(Set<Map.Entry<String, Object>> customFields) {
+        Map<String, Object> map = mappingOfSet(customFields);
+        List<String> roles = new ArrayList<>();
+
+        Object[] rolesArray = (Object[]) map.get("roles");
+
+        if (rolesArray != null) {
+
+            ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(rolesArray));
+
+            for (Object role : arrayList) {
+                roles.add(role.toString());
+            }
+        }
+
+        return roles;
+    }
+
+    private static Map<String, Object> mappingOfSet(Set<Map.Entry<String, Object>> customFields) {
+        Map<String, Object> map = new HashMap<>();
+
+        for(Map.Entry<String, Object> entry : customFields) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+
+        return map;
     }
 
     protected void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String clientId) throws
