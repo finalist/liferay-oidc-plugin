@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringPool;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -107,6 +108,11 @@ public class Liferay70Adapter implements LiferayAdapter {
         } catch (SystemException | PortalException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles) {
+        return null;
     }
 
 

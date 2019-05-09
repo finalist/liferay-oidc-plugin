@@ -1,15 +1,14 @@
 package nl.finalist.liferay.oidc;
 
-import java.util.Map;
-import java.util.UUID;
+import nl.finalist.liferay.oidc.providers.UserInfoProvider;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import org.apache.commons.lang3.StringUtils;
-
-import nl.finalist.liferay.oidc.providers.UserInfoProvider;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * AutoLogin for OpenID Connect 1.0
@@ -38,6 +37,19 @@ public class LibAutoLogin {
             Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
                     LibFilter.OPENID_CONNECT_SESSION_ATTR);
 
+            liferay.info(userInfo.toString());
+
+            Object roles = userInfo.get("roles");
+
+            ArrayList<String> rolesList = (ArrayList<String>) roles;
+
+            //todo remove me
+          for (String yo : rolesList){
+              liferay.info("ROLE " + yo);
+
+          }
+          //
+
             UserInfoProvider provider = ProviderFactory.getOpenIdProvider(oidcConfiguration.providerType());
 
              if (userInfo == null) {
@@ -52,7 +64,7 @@ public class LibAutoLogin {
                  String givenName = provider.getFirstName(userInfo);
                  String familyName = provider.getLastName(userInfo);
 
-                 String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName);
+                 String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName, rolesList);
                  liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
                  
                  userResponse = new String[]{userId, UUID.randomUUID().toString(), "false"};

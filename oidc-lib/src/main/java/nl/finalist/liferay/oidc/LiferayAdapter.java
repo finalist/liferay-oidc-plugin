@@ -1,6 +1,7 @@
 package nl.finalist.liferay.oidc;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 
 
 public interface LiferayAdapter {
@@ -19,6 +20,7 @@ public interface LiferayAdapter {
 
     long getCompanyId(HttpServletRequest request);
 
+
     /**
      * Create user or update if already existing. Keys to base existance on are: companyId, emailAddress.
      * GivenName and familyName are used for setting the according fields.
@@ -30,5 +32,7 @@ public interface LiferayAdapter {
      * @return the userId of the created or updated User, as a String
      */
     String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName);
+
+    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles);
 
 }

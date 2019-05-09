@@ -7,15 +7,18 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.User;
+import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.PwdGenerator;
 
-import java.util.Calendar;
-import java.util.Locale;
-
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
 
 public class Liferay62Adapter implements LiferayAdapter {
 
@@ -72,17 +75,45 @@ public class Liferay62Adapter implements LiferayAdapter {
 
     @Override
     public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName) {
+        return null;
+    }
+
+    @Override
+    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles) {
 
         try {
+            LOG.debug("Add email address = " + emailAddress);
+            LOG.debug("Add companyid = " + companyId);
             User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
+
+            List<UserGroup> userGroupRoles = UserGroupLocalServiceUtil.getUserGroups(companyId);
+
+            List<Long> userGroupsId = new ArrayList<>();
+
+            for (UserGroup uu : userGroupRoles) {
+                LOG.info("=========================================================");
+                LOG.info("USERGROUP Name : " + uu.getName() + " - ID : " + uu.getUserGroupId());
+                LOG.info("=========================================================");
+                if (roles.contains(uu.getName())) {
+                    userGroupsId.add(uu.getUserGroupId());
+                }
+            }
+
+            for (Long id : userGroupsId) {
+                LOG.info("ID GROUPS : " + id);
+            }
+
+
 
             if (user == null) {
                 LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
-                user = addUser(companyId, emailAddress, firstName, lastName);
+                user = addUser(companyId, emailAddress, firstName, lastName, userGroupsId);
             } else {
                 LOG.debug("User found, updating name details with info from userinfo");
-                updateUser(user, firstName, lastName);
+                updateUser(user, firstName, lastName, userGroupsId);
             }
+
+            LOG.info(user.getUserId());
             return String.valueOf(user.getUserId());
 
         } catch (SystemException | PortalException e) {
@@ -91,9 +122,18 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
 
+    private long[] toLongArray(List<Long> arraylist){
+        long[] longArray = new long[arraylist.size()];
+        for(int i = 0;i < longArray.length;i++)
+            longArray[i] = arraylist.get(i);
+
+        return longArray;
+    }
+
+
     // Copied from OpenSSOAutoLogin.java
     protected User addUser(
-            long companyId, String emailAddress, String firstName, String lastName)
+            long companyId, String emailAddress, String firstName, String lastName, List<Long> usergroups)
             throws SystemException, PortalException {
 
         Locale locale = LocaleUtil.getMostRelevantLocale();
@@ -116,7 +156,7 @@ public class Liferay62Adapter implements LiferayAdapter {
         long[] groupIds = null;
         long[] organizationIds = null;
         long[] roleIds = null;
-        long[] userGroupIds = null;
+        long[] userGroupIds = toLongArray(usergroups);
         boolean sendEmail = false;
         ServiceContext serviceContext = new ServiceContext();
 
@@ -137,10 +177,18 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
 
-    private void updateUser(User user, String firstName, String lastName) {
+    private void updateUser(User user, String firstName, String lastName, List<Long> userGroups) {
         user.setFirstName(firstName);
         user.setLastName(lastName);
+
+        LOG.info("=======UDPATING USER=============");
+
         try {
+
+            for (Long id : userGroups){
+                UserLocalServiceUtil.addUserGroupUser(id, user);
+                LOG.info("UPDATE USER GROUP: " + id);
+            }
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
             LOG.error("Could not update user with new name attributes", e);
