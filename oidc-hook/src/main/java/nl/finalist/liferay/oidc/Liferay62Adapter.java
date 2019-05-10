@@ -82,28 +82,13 @@ public class Liferay62Adapter implements LiferayAdapter {
     public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles) {
 
         try {
-            LOG.debug("Add email address = " + emailAddress);
-            LOG.debug("Add companyid = " + companyId);
-            User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
+            LOG.debug("Received emailAddress = " + emailAddress);
+            LOG.debug("Received companyId = " + companyId);
 
+            User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
             List<UserGroup> userGroupRoles = UserGroupLocalServiceUtil.getUserGroups(companyId);
 
-            List<Long> userGroupsId = new ArrayList<>();
-
-            for (UserGroup uu : userGroupRoles) {
-                LOG.info("=========================================================");
-                LOG.info("USERGROUP Name : " + uu.getName() + " - ID : " + uu.getUserGroupId());
-                LOG.info("=========================================================");
-                if (roles.contains(uu.getName())) {
-                    userGroupsId.add(uu.getUserGroupId());
-                }
-            }
-
-            for (Long id : userGroupsId) {
-                LOG.info("ID GROUPS : " + id);
-            }
-
-
+            List<Long> userGroupsId = mapRoleToUserGroupId(roles, userGroupRoles);
 
             if (user == null) {
                 LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
@@ -119,6 +104,20 @@ public class Liferay62Adapter implements LiferayAdapter {
         } catch (SystemException | PortalException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<Long> mapRoleToUserGroupId(ArrayList<String> roles, List<UserGroup> userGroupRoles) {
+        List<Long> userGroupsId = new ArrayList<>();
+
+        for (UserGroup userGroup : userGroupRoles) {
+
+            if (roles.contains(userGroup.getName())) {
+                userGroupsId.add(userGroup.getUserGroupId());
+            }
+
+        }
+
+        return userGroupsId;
     }
 
 
@@ -181,14 +180,12 @@ public class Liferay62Adapter implements LiferayAdapter {
         user.setFirstName(firstName);
         user.setLastName(lastName);
 
-        LOG.info("=======UDPATING USER=============");
-
         try {
 
             for (Long id : userGroups){
                 UserLocalServiceUtil.addUserGroupUser(id, user);
-                LOG.info("UPDATE USER GROUP: " + id);
             }
+
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
             LOG.error("Could not update user with new name attributes", e);
