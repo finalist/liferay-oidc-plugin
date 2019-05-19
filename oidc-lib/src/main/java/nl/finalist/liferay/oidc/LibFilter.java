@@ -82,6 +82,7 @@ public class LibFilter  {
             filterChain) throws Exception {
 
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
+        LiferaySitesConfiguration liferaySitesConfiguration = liferay.getLiferaySitesConfiguration();
 
         // If the plugin is not enabled, short circuit immediately
         if (!oidcConfiguration.isEnabled()) {
@@ -91,50 +92,66 @@ public class LibFilter  {
 
         liferay.trace("In processFilter()...");
 
-		String pathInfo = request.getPathInfo();
+        String pathInfo = request.getPathInfo();
 
-		if (null != pathInfo) {
-			if (pathInfo.contains("/portal/login")) {
-		        if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
-		                && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+        List<String> list = new ArrayList<>(Arrays.asList(liferaySitesConfiguration.sitesToInclude()));
+        String serverName = request.getServerName();
 
-		            if (!isUserLoggedIn(request)) {
-		                // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
-		                liferay.trace("About to exchange code for access token");
-		                exchangeCodeForAccessToken(request);
-		            } else {
-		                liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
-		                        "Will not exchange code for token twice.");
-		            }
-		        } else {
-		        	// LOGIN: The first time this filter gets hit, it will redirect to the OP.
-		            liferay.trace("About to redirect to OpenID Provider");
-		            redirectToLogin(request, response, oidcConfiguration.clientId());
-		            // no continuation of the filter chain; we expect the redirect to commence.
-		            return FilterResult.BREAK_CHAIN;
-		        }
-			} 
-			else
-			if (pathInfo.contains("/portal/logout")) {
-                final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
-                final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
-                final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
-                if (null != ssoLogoutUri && ssoLogoutUri.length
-                    () > 0 && isUserLoggedIn(request)) {
-					
-					liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
-			        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
-			        // From there, the request should be redirected back to the Liferay portal home page.
-					request.getSession().invalidate();
-					redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
-		            // no continuation of the filter chain; we expect the redirect to commence.
-		            return FilterResult.BREAK_CHAIN;
-				}
-			}
+        boolean containsSite = isContainsSite(serverName, list);
+
+        if (null != pathInfo) {
+            if (containsSite) {
+                if (pathInfo.contains("/portal/login")) {
+                    if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
+                            && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+
+                        if (!isUserLoggedIn(request)) {
+                            // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
+                            liferay.trace("About to exchange code for access token");
+                            exchangeCodeForAccessToken(request);
+                        } else {
+                            liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
+                                    "Will not exchange code for token twice.");
+                        }
+                    } else {
+                        // LOGIN: The first time this filter gets hit, it will redirect to the OP.
+                        liferay.trace("About to redirect to OpenID Provider");
+                        redirectToLogin(request, response, oidcConfiguration.clientId());
+                        // no continuation of the filter chain; we expect the redirect to commence.
+                        return FilterResult.BREAK_CHAIN;
+                    }
+                } }
+                else
+                if (pathInfo.contains("/portal/logout")) {
+                    final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
+                    final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
+                    final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
+                    if (null != ssoLogoutUri && ssoLogoutUri.length
+                        () > 0 && isUserLoggedIn(request)) {
+
+                        liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
+                        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
+                        // From there, the request should be redirected back to the Liferay portal home page.
+                        request.getSession().invalidate();
+                        redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
+                        // no continuation of the filter chain; we expect the redirect to commence.
+                        return FilterResult.BREAK_CHAIN;
+                    }
+                }
 		}
         // continue chain
 		return FilterResult.CONTINUE_CHAIN;
 
+    }
+
+    private boolean isContainsSite(String serverName, List<String> list) {
+        boolean containsSite = false;
+        for (String site : list){
+            if (serverName.contains(site)){
+                containsSite = true;
+            }
+        }
+        return containsSite;
     }
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {

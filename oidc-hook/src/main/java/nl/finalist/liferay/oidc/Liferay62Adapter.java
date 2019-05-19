@@ -30,6 +30,11 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
     @Override
+    public LiferaySitesConfiguration getLiferaySitesConfiguration() {
+        return new LiferaySitesPropsConfiguration();
+    }
+
+    @Override
     public void trace(String s) {
         LOG.trace(s);
     }
@@ -90,11 +95,21 @@ public class Liferay62Adapter implements LiferayAdapter {
 
             List<Long> userGroupsId = mapRoleToUserGroupId(roles, userGroupRoles);
 
+
+            //FIXME Guest user seems to not have firstname and lastname
+            if (firstName == null || firstName.isEmpty()){
+                firstName = "testFirst";
+            }
+
+            if (lastName == null || lastName.isEmpty()){
+                lastName = "testLast";
+            }
+
             if (user == null) {
-                LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
+                LOG.info("No Liferay user found with email address " + emailAddress + ", will create one.");
                 user = addUser(companyId, emailAddress, firstName, lastName, userGroupsId);
             } else {
-                LOG.debug("User found, updating name details with info from userinfo");
+                LOG.info("User found, updating name details with info from userinfo");
                 updateUser(user, firstName, lastName, userGroupsId);
             }
 

@@ -44,7 +44,12 @@ public class Liferay70Adapter implements LiferayAdapter {
             throw new SystemException(e);
         }
     }
-    
+
+    @Override
+    public LiferaySitesConfiguration getLiferaySitesConfiguration() {
+        return null;
+    }
+
     @Override
     public void trace(String s) {
         LOG.trace(s);

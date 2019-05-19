@@ -7,6 +7,8 @@ import java.util.ArrayList;
 public interface LiferayAdapter {
 
     OIDCConfiguration getOIDCConfiguration(long companyId);
+
+    LiferaySitesConfiguration getLiferaySitesConfiguration();
     
     void trace(String s);
     void info(String s);
