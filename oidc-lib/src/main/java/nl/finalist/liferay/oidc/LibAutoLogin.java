@@ -42,14 +42,6 @@ public class LibAutoLogin {
             Object roles = userInfo.get("roles");
 
             ArrayList<String> rolesList = (ArrayList<String>) roles;
-
-            //todo remove me
-          for (String yo : rolesList){
-              liferay.info("ROLE " + yo);
-
-          }
-          //
-
             UserInfoProvider provider = ProviderFactory.getOpenIdProvider(oidcConfiguration.providerType());
 
              if (userInfo == null) {

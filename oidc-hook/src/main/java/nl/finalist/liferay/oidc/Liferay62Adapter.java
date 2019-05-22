@@ -95,30 +95,37 @@ public class Liferay62Adapter implements LiferayAdapter {
 
             List<Long> userGroupsId = mapRoleToUserGroupId(roles, userGroupRoles);
 
-
-            //FIXME Guest user seems to not have firstname and lastname
-            if (firstName == null || firstName.isEmpty()){
-                firstName = "testFirst";
-            }
-
-            if (lastName == null || lastName.isEmpty()){
-                lastName = "testLast";
-            }
+            firstName = giveEmailPrefixIfNone(firstName, emailAddress);
+            lastName = giveEmailPrefixIfNone(lastName, emailAddress);
 
             if (user == null) {
-                LOG.info("No Liferay user found with email address " + emailAddress + ", will create one.");
+                LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
                 user = addUser(companyId, emailAddress, firstName, lastName, userGroupsId);
             } else {
-                LOG.info("User found, updating name details with info from userinfo");
+                LOG.debug("User found, updating name details with info from userinfo");
                 updateUser(user, firstName, lastName, userGroupsId);
             }
 
-            LOG.info(user.getUserId());
+            LOG.debug(user.getUserId());
+
             return String.valueOf(user.getUserId());
 
         } catch (SystemException | PortalException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String giveEmailPrefixIfNone(String name, String email) {
+
+        if (name == null || name.isEmpty()){
+            return trimEmailDomain(email);
+        }
+
+        return name;
+    }
+
+    private static String trimEmailDomain(String email) {
+        return email.substring(0, email.indexOf('@'));
     }
 
     private List<Long> mapRoleToUserGroupId(ArrayList<String> roles, List<UserGroup> userGroupRoles) {
