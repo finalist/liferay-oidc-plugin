@@ -12,7 +12,7 @@ public class LiferaySitesPropsConfiguration implements LiferaySitesConfiguration
 
     public String[] sitesToInclude() {
         try {
-            return PrefsPropsUtil.getStringArray("openidconnect.server.name",",");
+            return PrefsPropsUtil.getStringArray("openidconnect.server.names.include",",");
         } catch (SystemException e) {
             throw new RuntimeException(e);
         }
