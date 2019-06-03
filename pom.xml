@@ -33,6 +33,7 @@
         <liferay-dependency.version>6.2.5</liferay-dependency.version>
         <liferay-maven-plugin.version>6.2.10.15</liferay-maven-plugin.version>
         <java.version>1.7</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
@@ -132,13 +133,13 @@
         </repository>
     </distributionManagement>
 
-    <repositories>
-        <repository>
-        <id>releases-public</id>
-        <name>Finalist public releases</name>
-        <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
-    </repository>
-    </repositories>
+    <!--<repositories>-->
+        <!--<repository>-->
+        <!--<id>releases-public</id>-->
+        <!--<name>Finalist public releases</name>-->
+        <!--<url>https://nexus.iprofs.nl/content/repositories/releases-public</url>-->
+    <!--</repository>-->
+    <!--</repositories>-->
 
 	 <licenses>
 		 <license>
