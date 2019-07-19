@@ -98,12 +98,15 @@ public class Liferay62Adapter implements LiferayAdapter {
             firstName = giveEmailPrefixIfNone(firstName, emailAddress);
             lastName = giveEmailPrefixIfNone(lastName, emailAddress);
 
-            if (user == null) {
+            if (user == null && !userGroupsId.isEmpty()) {
                 LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
                 user = addUser(companyId, emailAddress, firstName, lastName, userGroupsId);
-            } else {
+            } else if (!userGroupsId.isEmpty()) {
                 LOG.debug("User found, updating name details with info from userinfo");
                 updateUser(user, firstName, lastName, userGroupsId);
+            } else {
+                LOG.debug("User found but has no groups defined. So deleting user : " + user);
+                UserLocalServiceUtil.deleteUser(user);
             }
 
             LOG.debug(user.getUserId());
@@ -117,7 +120,7 @@ public class Liferay62Adapter implements LiferayAdapter {
 
     private static String giveEmailPrefixIfNone(String name, String email) {
 
-        if (name == null || name.isEmpty()){
+        if (name == null || name.isEmpty()) {
             return trimEmailDomain(email);
         }
 
@@ -143,9 +146,9 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
 
-    private long[] toLongArray(List<Long> arraylist){
+    private long[] toLongArray(List<Long> arraylist) {
         long[] longArray = new long[arraylist.size()];
-        for(int i = 0;i < longArray.length;i++)
+        for (int i = 0; i < longArray.length; i++)
             longArray[i] = arraylist.get(i);
 
         return longArray;
@@ -198,19 +201,21 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
 
-    private void updateUser(User user, String firstName, String lastName, List<Long> userGroups) {
+    private void updateUser(User user, String firstName, String lastName, List<Long> newlyUserGroupIds) {
         user.setFirstName(firstName);
         user.setLastName(lastName);
 
         try {
+            UserGroupLocalServiceUtil.clearUserUserGroups(user.getUserId());
 
-            for (Long id : userGroups){
+            for (Long id : newlyUserGroupIds) {
                 UserLocalServiceUtil.addUserGroupUser(id, user);
             }
 
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
-            LOG.error("Could not update user with new name attributes", e);
+            LOG.error("Could not update user with new name attributes and new userGroups", e);
+            throw new RuntimeException(e);
         }
     }
 }
