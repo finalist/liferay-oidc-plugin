@@ -1,18 +1,6 @@
 package nl.finalist.liferay.oidc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oltu.oauth2.client.OAuthClient;
@@ -24,6 +12,20 @@ import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Servlet filter that initiates OpenID Connect logins, and handles the resulting flow, until and including the
@@ -80,6 +82,7 @@ public class LibFilter  {
             filterChain) throws Exception {
 
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
+        LiferaySitesConfiguration liferaySitesConfiguration = liferay.getLiferaySitesConfiguration();
 
         // If the plugin is not enabled, short circuit immediately
         if (!oidcConfiguration.isEnabled()) {
@@ -89,50 +92,66 @@ public class LibFilter  {
 
         liferay.trace("In processFilter()...");
 
-		String pathInfo = request.getPathInfo();
+        String pathInfo = request.getPathInfo();
 
-		if (null != pathInfo) {
-			if (pathInfo.contains("/portal/login")) {
-		        if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
-		                && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+        List<String> list = new ArrayList<>(Arrays.asList(liferaySitesConfiguration.sitesToInclude()));
+        String serverName = request.getServerName();
 
-		            if (!isUserLoggedIn(request)) {
-		                // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
-		                liferay.trace("About to exchange code for access token");
-		                exchangeCodeForAccessToken(request);
-		            } else {
-		                liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
-		                        "Will not exchange code for token twice.");
-		            }
-		        } else {
-		        	// LOGIN: The first time this filter gets hit, it will redirect to the OP.
-		            liferay.trace("About to redirect to OpenID Provider");
-		            redirectToLogin(request, response, oidcConfiguration.clientId());
-		            // no continuation of the filter chain; we expect the redirect to commence.
-		            return FilterResult.BREAK_CHAIN;
-		        }
-			} 
-			else
-			if (pathInfo.contains("/portal/logout")) {
-                final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
-                final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
-                final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
-                if (null != ssoLogoutUri && ssoLogoutUri.length
-                    () > 0 && isUserLoggedIn(request)) {
-					
-					liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
-			        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
-			        // From there, the request should be redirected back to the Liferay portal home page.
-					request.getSession().invalidate();
-					redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
-		            // no continuation of the filter chain; we expect the redirect to commence.
-		            return FilterResult.BREAK_CHAIN;
-				}
-			}
+        boolean containsSite = isContainsSite(serverName, list);
+
+        if (null != pathInfo) {
+            if (containsSite) {
+                if (pathInfo.contains("/portal/login")) {
+                    if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
+                            && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
+
+                        if (!isUserLoggedIn(request)) {
+                            // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
+                            liferay.trace("About to exchange code for access token");
+                            exchangeCodeForAccessToken(request);
+                        } else {
+                            liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
+                                    "Will not exchange code for token twice.");
+                        }
+                    } else {
+                        // LOGIN: The first time this filter gets hit, it will redirect to the OP.
+                        liferay.trace("About to redirect to OpenID Provider");
+                        redirectToLogin(request, response, oidcConfiguration.clientId());
+                        // no continuation of the filter chain; we expect the redirect to commence.
+                        return FilterResult.BREAK_CHAIN;
+                    }
+                } }
+                else
+                if (pathInfo.contains("/portal/logout")) {
+                    final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
+                    final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
+                    final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
+                    if (null != ssoLogoutUri && ssoLogoutUri.length
+                        () > 0 && isUserLoggedIn(request)) {
+
+                        liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
+                        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
+                        // From there, the request should be redirected back to the Liferay portal home page.
+                        request.getSession().invalidate();
+                        redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
+                        // no continuation of the filter chain; we expect the redirect to commence.
+                        return FilterResult.BREAK_CHAIN;
+                    }
+                }
 		}
         // continue chain
 		return FilterResult.CONTINUE_CHAIN;
 
+    }
+
+    private boolean isContainsSite(String serverName, List<String> list) {
+        boolean containsSite = false;
+        for (String site : list){
+            if (serverName.contains(site)){
+                containsSite = true;
+            }
+        }
+        return containsSite;
     }
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {
@@ -160,6 +179,12 @@ public class LibFilter  {
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
+
+            Set<Map.Entry<String, Object>> customFields = oAuthResponse.getIdToken().getClaimsSet().getCustomFields();
+
+            List<String> roles = getRolesOfUser(customFields);
+
+
             liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
 
@@ -178,12 +203,42 @@ public class LibFilter  {
             liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
+            openIDUserInfo.put("roles", roles);
+
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
 
         } catch (OAuthSystemException | OAuthProblemException e) {
             throw new IOException("While exchanging code for access token and retrieving user info", e);
         }
+    }
+
+    protected static List<String> getRolesOfUser(Set<Map.Entry<String, Object>> customFields) {
+        Map<String, Object> map = mappingOfSet(customFields);
+        List<String> roles = new ArrayList<>();
+
+        Object[] rolesArray = (Object[]) map.get("roles");
+
+        if (rolesArray != null) {
+
+            ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(rolesArray));
+
+            for (Object role : arrayList) {
+                roles.add(role.toString());
+            }
+        }
+
+        return roles;
+    }
+
+    private static Map<String, Object> mappingOfSet(Set<Map.Entry<String, Object>> customFields) {
+        Map<String, Object> map = new HashMap<>();
+
+        for(Map.Entry<String, Object> entry : customFields) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+
+        return map;
     }
 
     protected void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String clientId) throws
