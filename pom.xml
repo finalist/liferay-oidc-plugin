@@ -123,7 +123,7 @@
         <repository>
             <id>releases-public</id>
             <name>Finalist public releases</name>
-            <url>https://nexus.finalist.nl/repositories/releases-public</url>
+            <url>https://nexus.finalist.nl/repository/releases-public</url>
         </repository>
     </distributionManagement>
 
