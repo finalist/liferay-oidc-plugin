@@ -123,17 +123,9 @@
         <repository>
             <id>releases-public</id>
             <name>Finalist public releases</name>
-            <url>https://nexus.iprofs.nl/content/repositories/releases-public</url>
+            <url>https://nexus.finalist.nl/repositories/releases-public</url>
         </repository>
     </distributionManagement>
-
-    <!--<repositories>-->
-        <!--<repository>-->
-        <!--<id>releases-public</id>-->
-        <!--<name>Finalist public releases</name>-->
-        <!--<url>https://nexus.iprofs.nl/content/repositories/releases-public</url>-->
-    <!--</repository>-->
-    <!--</repositories>-->
 
 	 <licenses>
 		 <license>
