@@ -26,8 +26,7 @@ import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
                 "dispatcher=REQUEST",
                 "servlet-context-name=",
                 "servlet-filter-name=SSO OpenID Connect Filter",
-                "url-pattern=/c/portal/login",
-                "url-pattern=/c/portal/logout"
+                "url-pattern=/*"
         },
         service = Filter.class,
         configurationPid = "nl.finalist.liferay.oidc.OpenIDConnectOCDConfiguration"

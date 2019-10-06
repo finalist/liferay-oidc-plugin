@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.FilterChain;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -191,6 +192,37 @@ public class LibFilter  {
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
 
         try {
+        	String ui_locales = null;
+        	
+    		Cookie[] cookies = request.getCookies(); // look for GUEST_LANGUAGE_ID
+    		if (null != cookies) {
+        		for (Cookie cookie : cookies) {
+        			liferay.trace("redirectToLogin: cookie: " + cookie.getName() + " = " + cookie.getValue());
+        			if ("GUEST_LANGUAGE_ID".equals(cookie.getName())) {
+        				String guestLanguageId = cookie.getValue();
+        				String[] guestLocale = guestLanguageId.split("_");
+        				ui_locales = guestLanguageId; // full locale, just as-is: 3-zone OR 2-zone OR 1-zone locale
+        				if (guestLocale.length > 2) { // we got 3-zone locale: language_COUNTRY_REGION: Add "langauge_COUNTRY"
+        					ui_locales += " " + guestLocale[0] + "_" + guestLocale[1];
+        				}
+        				if (guestLocale.length > 1) { // we got (3- or) 2-zone locale: language_COUNTRY: Add "language"
+        					ui_locales += " " + guestLocale[0];
+        				}
+            			liferay.trace("redirectToLogin: use for ui_locales: " + ui_locales);
+        			}
+        		}
+    		}
+    		
+    		if (null == ui_locales) { // no GUEST_LANGUAGE_ID cookie available:
+        		ui_locales = request.getServletPath().substring(1); // may be /c (default locale, useless) or /en (requested locale, useful) or /xy (useful) ...
+    		}
+    		
+    		if (null == ui_locales || ui_locales.length() < 2) { // skip values being too short to meet https://tools.ietf.org/html/rfc5646
+    			// TODO: Improve locale recognition according to syntax given in RFC-5646
+    			ui_locales = request.getLocale().getLanguage();
+    		}
+    		liferay.trace("redirectToLogin: ui_locales: " + ui_locales);
+    		
             OAuthClientRequest oAuthRequest = OAuthClientRequest
                     .authorizationLocation(oidcConfiguration.authorizationLocation())
                     .setClientId(clientId)
@@ -198,6 +230,7 @@ public class LibFilter  {
                     .setResponseType("code")
                     .setScope(oidcConfiguration.scope())
                     .setState(generateStateParam(request))
+                    .setParameter("ui_locales", ui_locales) // see http://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
                     .buildQueryMessage();
             liferay.debug("Redirecting to URL: " + oAuthRequest.getLocationUri());
             response.sendRedirect(oAuthRequest.getLocationUri());
