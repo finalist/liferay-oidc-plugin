@@ -19,6 +19,7 @@ import org.apache.oltu.oauth2.client.OAuthClient;
 import org.apache.oltu.oauth2.client.URLConnectionClient;
 import org.apache.oltu.oauth2.client.request.OAuthBearerClientRequest;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
+import org.apache.oltu.oauth2.client.response.OAuthAccessTokenResponse;
 import org.apache.oltu.oauth2.client.response.OAuthResourceResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -158,17 +159,18 @@ public class LibFilter  {
                     .buildBodyMessage();
             tokenRequest.addHeader("Accept", "application/json");
             tokenRequest.addHeader("Content-Type", "application/json");
+            tokenRequest.addHeader("Authorization", "Basic UjJkcHhRM3ZQcnRmZ0Y3MjpmRHc3TXBrazVjekhOdVNSdG1oR21BR0w0MkNheFFCOQ==");
             liferay.info("Token request to uri: " + tokenRequest.getLocationUri());
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
-            OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
+            OAuthAccessTokenResponse oAuthResponse = oAuthClient.accessToken(tokenRequest);
             liferay.info("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
-
-            if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
-                liferay.warn("The token was not valid: " + oAuthResponse.toString());
-                return;
-            }
+            liferay.info("Токен " + accessToken);
+//            if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
+//                liferay.warn("The token was not valid: " + oAuthResponse.toString());
+//                return;
+//            }
 
             // The only API to be enabled (in case of Google) is Google+.
             OAuthClientRequest userInfoRequest = new OAuthBearerClientRequest(oidcConfiguration.profileUri())
@@ -179,7 +181,7 @@ public class LibFilter  {
             liferay.info("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
-            liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
+            liferay.info("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
 
         } catch (OAuthSystemException | OAuthProblemException e) {
