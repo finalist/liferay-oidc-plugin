@@ -156,11 +156,13 @@ public class LibFilter  {
                     .setCode(codeParam)
                     .setRedirectURI(getRedirectUri(request))
                     .buildBodyMessage();
-            liferay.debug("Token request to uri: " + tokenRequest.getLocationUri());
+            tokenRequest.addHeader("Accept", "application/json");
+            tokenRequest.addHeader("Content-Type", "application/json");
+            liferay.info("Token request to uri: " + tokenRequest.getLocationUri());
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
-            liferay.trace("Access/id token response: " + oAuthResponse);
+            liferay.info("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
 
             if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
@@ -174,8 +176,7 @@ public class LibFilter  {
             liferay.trace("UserInfo request to uri: " + userInfoRequest.getLocationUri());
             OAuthResourceResponse userInfoResponse =
                     oAuthClient.resource(userInfoRequest, OAuth.HttpMethod.GET, OAuthResourceResponse.class);
-
-            liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
+            liferay.info("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
