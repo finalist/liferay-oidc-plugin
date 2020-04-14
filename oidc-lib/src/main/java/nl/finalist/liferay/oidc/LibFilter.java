@@ -20,6 +20,7 @@ import org.apache.oltu.oauth2.client.URLConnectionClient;
 import org.apache.oltu.oauth2.client.request.OAuthBearerClientRequest;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
 import org.apache.oltu.oauth2.client.response.OAuthAccessTokenResponse;
+import org.apache.oltu.oauth2.client.response.OAuthJSONAccessTokenResponse;
 import org.apache.oltu.oauth2.client.response.OAuthResourceResponse;
 import org.apache.oltu.oauth2.common.OAuth;
 import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
@@ -145,7 +146,7 @@ public class LibFilter  {
 
             String expectedState = generateStateParam(request);
             if (!expectedState.equals(stateParam)) {
-                liferay.info("Provided state parameter '" + stateParam + "' does not equal expected '"
+                liferay.debug("Provided state parameter '" + stateParam + "' does not equal expected '"
                         + expectedState + "', cannot continue.");
                 throw new IOException("Invalid state parameter");
             }
@@ -160,17 +161,12 @@ public class LibFilter  {
             tokenRequest.addHeader("Accept", "application/json");
             tokenRequest.addHeader("Content-Type", "application/json");
             tokenRequest.addHeader("Authorization", "Basic UjJkcHhRM3ZQcnRmZ0Y3MjpmRHc3TXBrazVjekhOdVNSdG1oR21BR0w0MkNheFFCOQ==");
-            liferay.info("Token request to uri: " + tokenRequest.getLocationUri());
+            liferay.debug("Token request to uri: " + tokenRequest.getLocationUri());
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
-            OAuthAccessTokenResponse oAuthResponse = oAuthClient.accessToken(tokenRequest);
-            liferay.info("Access/id token response: " + oAuthResponse);
+            final OAuthJSONAccessTokenResponse oAuthResponse = oAuthClient.accessToken(tokenRequest);
+            liferay.debug("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
-            liferay.info("Токен " + accessToken);
-//            if (!oAuthResponse.checkId(oidcConfiguration.issuer(), oidcConfiguration.clientId())) {
-//                liferay.warn("The token was not valid: " + oAuthResponse.toString());
-//                return;
-//            }
 
             // The only API to be enabled (in case of Google) is Google+.
             OAuthClientRequest userInfoRequest = new OAuthBearerClientRequest(oidcConfiguration.profileUri())
@@ -178,10 +174,10 @@ public class LibFilter  {
             liferay.trace("UserInfo request to uri: " + userInfoRequest.getLocationUri());
             OAuthResourceResponse userInfoResponse =
                     oAuthClient.resource(userInfoRequest, OAuth.HttpMethod.GET, OAuthResourceResponse.class);
-            liferay.info("Response from UserInfo request: " + userInfoResponse.getBody());
+            liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
-            liferay.info("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
+            liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
 
         } catch (OAuthSystemException | OAuthProblemException e) {
