@@ -1,18 +1,44 @@
 package nl.finalist.liferay.oidc.providers;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class UserInfoProvider {
 
-	public String getEmail(Map<String, String> userInfo) {
-		return userInfo.get("email");
-	}
+    private static final Log LOG = LogFactoryUtil.getLog(UserInfoProvider.class);
 
-	public String getFirstName(Map<String, String> userInfo) {
-		return userInfo.get("given_name");
-	}
+    public String getEmail(Map<String, Object> userInfo) {
+        return (String) userInfo.get("email");
+    }
 
-	public String getLastName(Map<String, String> userInfo) {
-		return userInfo.get("family_name");
-	}
+    public String getUuid(Map<String, Object> userInfo) {
+        return (String) userInfo.get("uuid");
+    }
+
+    public String getFirstName(Map<String, Object> userInfo) {
+        return (String) userInfo.get("firstName");
+    }
+
+    public String getLastName(Map<String, Object> userInfo) {
+        return (String) userInfo.get("lastName");
+    }
+
+    public String getMiddleName(Map<String, Object> userInfo) {
+        return (String) userInfo.get("middleName");
+    }
+
+    public long[] getUserGroupIds(Map<String, Object> userInfo) {
+        final List<Integer> userGroupIds = (List<Integer>) userInfo.get("userGroupIds");
+        if (userGroupIds != null && !userGroupIds.isEmpty()) {
+            final long[] longs = userGroupIds.stream().mapToLong(Integer::longValue).toArray();
+            LOG.error(Arrays.toString(longs));
+            return longs;
+        }
+        return null;
+    }
+
 }

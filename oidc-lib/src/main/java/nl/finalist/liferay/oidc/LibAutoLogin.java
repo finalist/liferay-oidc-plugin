@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import nl.finalist.liferay.oidc.utils.UserDtoUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import nl.finalist.liferay.oidc.providers.UserInfoProvider;
@@ -35,8 +36,7 @@ public class LibAutoLogin {
 
         if (oidcConfiguration.isEnabled()) {
         	HttpSession session = request.getSession();
-            Map<String, String> userInfo = (Map<String, String>) session.getAttribute(
-                    LibFilter.OPENID_CONNECT_SESSION_ATTR);
+            Map<String, Object> userInfo = (Map<String, Object>) session.getAttribute(LibFilter.OPENID_CONNECT_SESSION_ATTR);
 
             UserInfoProvider provider = ProviderFactory.getOpenIdProvider(oidcConfiguration.providerType());
 
@@ -48,12 +48,8 @@ public class LibAutoLogin {
                          "Cannot correlate to Liferay user. UserInfo: " + userInfo);
              } else {
                  liferay.trace("Found OpenID Connect session attribute, userinfo: " + userInfo);
-            	 String emailAddress = provider.getEmail(userInfo);
-                 String givenName = provider.getFirstName(userInfo);
-                 String familyName = provider.getLastName(userInfo);
-
-                 String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName);
-                 liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
+                 String userId = liferay.createOrUpdateUser(companyId, UserDtoUtils.generateNew(userInfo, provider));
+                 liferay.trace("Returning credentials for userId " + userId);
                  
                  userResponse = new String[]{userId, UUID.randomUUID().toString(), "false"};
              }
@@ -63,4 +59,5 @@ public class LibAutoLogin {
         
         return userResponse;
     }
+
 }

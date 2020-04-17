@@ -1,5 +1,7 @@
 package nl.finalist.liferay.oidc;
 
+import nl.finalist.liferay.oidc.dto.UserDto;
+
 import javax.servlet.http.HttpServletRequest;
 
 
@@ -24,11 +26,8 @@ public interface LiferayAdapter {
      * GivenName and familyName are used for setting the according fields.
      *
      * @param companyId the virtual instance id
-     * @param emailAddress the email address of the Liferay user
-     * @param firstName the first name of the Liferay user
-     * @param lastName last name of the Liferay user
      * @return the userId of the created or updated User, as a String
      */
-    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName);
+    String createOrUpdateUser(long companyId, UserDto userDto);
 
 }
