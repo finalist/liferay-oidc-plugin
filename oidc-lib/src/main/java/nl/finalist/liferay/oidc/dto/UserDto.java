@@ -1,6 +1,7 @@
 package nl.finalist.liferay.oidc.dto;
 
 import java.util.Locale;
+import java.util.Set;
 
 public class UserDto {
 
@@ -28,7 +29,7 @@ public class UserDto {
     private long[] groupIds;
     private long[] organizationIds;
     private long[] roleIds;
-    private long[] userGroupIds;
+    private Set<PersonGroupDto> userGroupIds;
     private boolean sendEmail;
     private boolean passwordReset;
     private String queryQuestion;
@@ -218,11 +219,11 @@ public class UserDto {
         this.roleIds = roleIds;
     }
 
-    public long[] getUserGroupIds() {
+    public Set<PersonGroupDto> getUserGroupIds() {
         return userGroupIds;
     }
 
-    public void setUserGroupIds(long[] userGroupIds) {
+    public void setUserGroupIds(Set<PersonGroupDto> userGroupIds) {
         this.userGroupIds = userGroupIds;
     }
 

@@ -5,18 +5,20 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.model.User;
-import com.liferay.portal.service.GroupServiceUtil;
+import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.UserGroupLocalServiceUtil;
+import com.liferay.portal.service.UserGroupServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
-import com.liferay.portal.service.persistence.UserFinderUtil;
 import com.liferay.portal.service.persistence.UserUtil;
 import com.liferay.portal.util.PortalUtil;
+import nl.finalist.liferay.oidc.dto.PersonGroupDto;
 import nl.finalist.liferay.oidc.dto.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Liferay62Adapter implements LiferayAdapter {
@@ -73,8 +75,7 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
     @Override
-    public String createOrUpdateUser(long companyId, UserDto userDto) {
-        LOG.error(userDto);
+    public Long createOrUpdateUser(long companyId, UserDto userDto) {
         try {
             User user = UserLocalServiceUtil.fetchUserByUuidAndCompanyId(userDto.getUuid(), companyId);
 
@@ -85,13 +86,90 @@ public class Liferay62Adapter implements LiferayAdapter {
                 LOG.debug("User found, updating name details with info from userinfo");
                 updateUser(user, userDto);
             }
-            return String.valueOf(user.getUserId());
-
+            return user.getUserId();
         } catch (SystemException | PortalException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
+    public Set<Long> createOrUpdateUserGroup(long companyId, long userId, Set<PersonGroupDto> personGroupDtos) {
+        Set<Long> groupIds = new HashSet<>();
+        for (PersonGroupDto personGroupDto : personGroupDtos) {
+            try {
+                UserGroup userGroup = UserGroupLocalServiceUtil.fetchUserGroupByUuidAndCompanyId(personGroupDto.getUuid(), companyId);
+                if (userGroup == null) {
+                    userGroup = addNewUserGroup(companyId, userId, personGroupDto);
+                } else {
+                    userGroup = updateUserGroup(userGroup, personGroupDto);
+                }
+                groupIds.add(userGroup.getGroupId());
+            } catch (SystemException | PortalException e) {
+                LOG.error(e.getMessage());
+            }
+        }
+        return groupIds;
+    }
+
+    private UserGroup updateUserGroup(UserGroup userGroup, PersonGroupDto personGroupDto) {
+        try {
+            userGroup.setName(personGroupDto.getName());
+            return UserGroupLocalServiceUtil.updateUserGroup(userGroup);
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private UserGroup addNewUserGroup(long companyId, long userId, PersonGroupDto personGroupDto) {
+        try {
+            final UserGroup userGroup = UserGroupLocalServiceUtil.addUserGroup(userId, companyId, personGroupDto.getName(), null, null);
+            userGroup.setUuid(personGroupDto.getUuid());
+            return UserGroupLocalServiceUtil.updateUserGroup(userGroup);
+        } catch (PortalException | SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void addUserInUserGroup(Long userId, Set<Long> newUserGroupIds) {
+        try {
+            final Set<Long> oldUserGroupIds = UserGroupLocalServiceUtil.getUserUserGroups(userId).stream()
+                    .map(getUserGroupLongFunction())
+                    .collect(Collectors.toSet());
+            final Set<Long> newIds = newUserGroupIds.stream().filter(id -> !oldUserGroupIds.contains(id)).collect(Collectors.toSet());
+            final Set<Long> deleteIds = oldUserGroupIds.stream().filter(id -> !oldUserGroupIds.contains(id)).collect(Collectors.toSet());
+            newIds.forEach(id -> addGroup(userId, id));
+            deleteIds.forEach(id -> deleteGroup(userId, id));
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Function<UserGroup, Long> getUserGroupLongFunction() {
+        return userGroup -> {
+            try {
+                return userGroup.getGroupId();
+            } catch (PortalException | SystemException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    private void deleteGroup(long userId, Long groupId) {
+        try {
+            UserUtil.removeUserGroup(userId, groupId);
+        } catch (SystemException e) {
+            LOG.error(e.getMessage());
+        }
+    }
+
+    private void addGroup(long userId, Long groupId) {
+        try {
+            UserUtil.addUserGroup(userId, groupId);
+        } catch (SystemException e) {
+            LOG.error(e.getMessage());
+        }
+    }
 
     // Copied from OpenSSOAutoLogin.java
     protected User addUser(long companyId, UserDto userDto) throws SystemException, PortalException {
@@ -122,7 +200,7 @@ public class Liferay62Adapter implements LiferayAdapter {
                 userDto.getGroupIds(),
                 userDto.getOrganizationIds(),
                 userDto.getRoleIds(),
-                userDto.getUserGroupIds(),
+                null,
                 userDto.isSendEmail(),
                 serviceContext
         );
@@ -138,40 +216,11 @@ public class Liferay62Adapter implements LiferayAdapter {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setMiddleName(userDto.getMiddleName());
-        updateUserGroupIds(user, userDto);
+
         try {
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
             LOG.error("Could not update user with new name attributes", e);
-        }
-    }
-
-    private void updateUserGroupIds(User user, UserDto userDto) {
-        try {
-            final Set<Long> oldUserGroupId = Arrays.stream(user.getUserGroupIds()).boxed().collect(Collectors.toSet());
-            final Set<Long> newUserGroupId = Arrays.stream(userDto.getUserGroupIds()).boxed().collect(Collectors.toSet());
-            final Set<Long> newIds = newUserGroupId.stream().filter(id -> !oldUserGroupId.contains(id)).collect(Collectors.toSet());
-            final Set<Long> deleteIds = oldUserGroupId.stream().filter(id -> !oldUserGroupId.contains(id)).collect(Collectors.toSet());
-            newIds.forEach(id -> addGroup(user.getUserId(), id));
-            deleteIds.forEach(id -> deleteGroup(user.getUserId(), id));
-        } catch (SystemException e) {
-            LOG.error(e.getMessage());
-        }
-    }
-
-    private void deleteGroup(long userId, Long groupId) {
-        try {
-            UserUtil.removeUserGroup(userId, groupId);
-        } catch (SystemException e) {
-            LOG.error(e.getMessage());
-        }
-    }
-
-    private void addGroup(long userId, Long groupId) {
-        try {
-            UserUtil.addUserGroup(userId, groupId);
-        } catch (SystemException e) {
-            LOG.error(e.getMessage());
         }
     }
 

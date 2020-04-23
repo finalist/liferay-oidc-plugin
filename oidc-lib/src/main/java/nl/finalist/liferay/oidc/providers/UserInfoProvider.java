@@ -2,10 +2,12 @@ package nl.finalist.liferay.oidc.providers;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import nl.finalist.liferay.oidc.dto.PersonGroupDto;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UserInfoProvider {
 
@@ -31,14 +33,14 @@ public class UserInfoProvider {
         return (String) userInfo.get("middleName");
     }
 
-    public long[] getUserGroupIds(Map<String, Object> userInfo) {
-        final List<Integer> userGroupIds = (List<Integer>) userInfo.get("userGroupIds");
-        if (userGroupIds != null && !userGroupIds.isEmpty()) {
-            final long[] longs = userGroupIds.stream().mapToLong(Integer::longValue).toArray();
-            LOG.error(Arrays.toString(longs));
-            return longs;
-        }
-        return null;
+    public Set<PersonGroupDto> getUserGroupIds(Map<String, Object> userInfo) {
+        return ((List<Map<String, String>>) userInfo.get("groups")).stream()
+                .map(this::convertMap)
+                .collect(Collectors.toSet());
+    }
+
+    private PersonGroupDto convertMap(Map<String, String> map) {
+        return PersonGroupDto.of(map.get("uuid"), map.get("name"));
     }
 
 }
