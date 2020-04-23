@@ -1,6 +1,5 @@
 package nl.finalist.liferay.oidc;
 
-import com.liferay.portal.kernel.model.User;
 import nl.finalist.liferay.oidc.dto.UserDto;
 import nl.finalist.liferay.oidc.providers.UserInfoProvider;
 import nl.finalist.liferay.oidc.utils.UserDtoUtils;

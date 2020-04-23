@@ -12,8 +12,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.kernel.service.UserTrackerLocalService;
-import com.liferay.portal.kernel.service.UserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.UserGroupUtil;
 import com.liferay.portal.kernel.service.persistence.UserUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -22,7 +20,6 @@ import nl.finalist.liferay.oidc.dto.PersonGroupDto;
 import nl.finalist.liferay.oidc.dto.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -101,10 +98,8 @@ public class Liferay70Adapter implements LiferayAdapter {
         try {
             User user = userLocalService.fetchUserByUuidAndCompanyId(userDto.getUuid(), companyId);
             if (user == null) {
-                LOG.debug("No Liferay user found with email address " + userDto.getUuid() + ", will create one.");
                 user = addUser(companyId, userDto);
             } else {
-                LOG.debug("User found, updating name details with info from userinfo");
                 updateUser(user, userDto);
             }
             return user.getUserId();
@@ -121,13 +116,10 @@ public class Liferay70Adapter implements LiferayAdapter {
             try {
                 final UserGroup userGroup = UserGroupLocalServiceUtil.fetchUserGroupByUuidAndCompanyId(personGroupDto.getUuid(), companyId);
                 if (userGroup == null) {
-                    LOG.error("Группы нет");
                     groupIds.add(addNewUserGroup(companyId, userId, personGroupDto).getUserGroupId());
                 } else {
-                    LOG.error("Группа есть");
                     groupIds.add(updateUserGroup(userGroup, personGroupDto).getUserGroupId());
                 }
-                LOG.error("Перед добавлением в список: " + userGroup.getUserGroupId());
             } catch (SystemException e) {
                 LOG.error(e.getMessage());
             }
@@ -148,10 +140,7 @@ public class Liferay70Adapter implements LiferayAdapter {
         try {
             final UserGroup userGroup = UserGroupLocalServiceUtil.addUserGroup(userId, companyId, personGroupDto.getName(), null, null);
             userGroup.setUuid(personGroupDto.getUuid());
-            LOG.error("Группа до сохранения в бд: " + userGroup.getUserGroupId());
-            final UserGroup userGroup1 = UserGroupLocalServiceUtil.updateUserGroup(userGroup);
-            LOG.error("После сохранения в бд: " + userGroup1.getUserGroupId());
-            return userGroup1;
+            return UserGroupLocalServiceUtil.updateUserGroup(userGroup);
         } catch (PortalException | SystemException e) {
             throw new RuntimeException(e);
         }
@@ -163,18 +152,14 @@ public class Liferay70Adapter implements LiferayAdapter {
             final Set<Long> oldUserGroupIds = UserGroupLocalServiceUtil.getUserUserGroups(userId).stream()
                     .map(getUserGroupLongFunction())
                     .collect(Collectors.toSet());
-            LOG.error("Группы пользователя: " + Arrays.toString(oldUserGroupIds.toArray()));
             final Set<Long> newIds = newUserGroupIds.stream()
                     .filter(id -> !oldUserGroupIds.contains(id))
                     .collect(Collectors.toSet());
-            LOG.error("Новые группы пользователя: " + Arrays.toString(newIds.toArray()));
             final long[] deleteIds = oldUserGroupIds.stream()
                     .filter(id -> !newIds.contains(id))
                     .mapToLong(Long::longValue)
                     .toArray();
-            LOG.error("Удаленные группы пользователя: " + Arrays.toString(deleteIds));
             final long[] newIdsArray = newIds.stream().mapToLong(Long::longValue).toArray();
-            LOG.error("Массив новых: " + Arrays.toString(newIdsArray));
             if (newIdsArray != null && newIdsArray.length > 0) {
                 UserUtil.addUserGroups(userId, newIdsArray);
                 UserGroupUtil.clearCache();
