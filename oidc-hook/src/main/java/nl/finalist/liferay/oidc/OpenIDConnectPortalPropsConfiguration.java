@@ -123,4 +123,13 @@ public class OpenIDConnectPortalPropsConfiguration implements OIDCConfiguration 
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public String groupClaim() {
+        try {
+            return PrefsPropsUtil.getString("openidconnect.groupclaim");
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

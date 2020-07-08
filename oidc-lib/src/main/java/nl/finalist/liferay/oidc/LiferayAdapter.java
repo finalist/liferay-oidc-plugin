@@ -1,7 +1,7 @@
 package nl.finalist.liferay.oidc;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
+import java.util.List;
 
 
 public interface LiferayAdapter {
@@ -35,6 +35,6 @@ public interface LiferayAdapter {
      */
     String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName);
 
-    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles);
+    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, List<String> groups);
 
 }

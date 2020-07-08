@@ -67,4 +67,9 @@ public interface OIDCConfiguration {
      * @return
      */
     String providerType();
+
+    /**
+     * Group claim
+     */
+    String groupClaim();
 }

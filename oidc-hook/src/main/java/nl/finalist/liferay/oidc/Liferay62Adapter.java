@@ -84,7 +84,7 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
     @Override
-    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles) {
+    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, List<String> groups) {
 
         try {
             LOG.debug("Received emailAddress = " + emailAddress);
@@ -93,7 +93,7 @@ public class Liferay62Adapter implements LiferayAdapter {
             User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
             List<UserGroup> userGroupRoles = UserGroupLocalServiceUtil.getUserGroups(companyId);
 
-            List<Long> userGroupsId = mapRoleToUserGroupId(roles, userGroupRoles);
+            List<Long> userGroupsId = mapGroupToUserGroups(groups, userGroupRoles);
 
             firstName = giveEmailPrefixIfNone(firstName, emailAddress);
             lastName = giveEmailPrefixIfNone(lastName, emailAddress);
@@ -131,12 +131,12 @@ public class Liferay62Adapter implements LiferayAdapter {
         return email.substring(0, email.indexOf('@'));
     }
 
-    private List<Long> mapRoleToUserGroupId(ArrayList<String> roles, List<UserGroup> userGroupRoles) {
+    private List<Long> mapGroupToUserGroups(List<String> groups, List<UserGroup> userGroupRoles) {
         List<Long> userGroupsId = new ArrayList<>();
 
         for (UserGroup userGroup : userGroupRoles) {
 
-            if (roles.contains(userGroup.getName())) {
+            if (groups.contains(userGroup.getName().toLowerCase())) {
                 userGroupsId.add(userGroup.getUserGroupId());
             }
 
@@ -180,7 +180,12 @@ public class Liferay62Adapter implements LiferayAdapter {
         long[] groupIds = null;
         long[] organizationIds = null;
         long[] roleIds = null;
-        long[] userGroupIds = toLongArray(usergroups);
+
+        long[] userGroupIds = null;
+        if (usergroups != null) {
+            userGroupIds = toLongArray(usergroups);
+        }
+
         boolean sendEmail = false;
         ServiceContext serviceContext = new ServiceContext();
 
@@ -208,8 +213,10 @@ public class Liferay62Adapter implements LiferayAdapter {
         try {
             UserGroupLocalServiceUtil.clearUserUserGroups(user.getUserId());
 
-            for (Long id : newlyUserGroupIds) {
-                UserLocalServiceUtil.addUserGroupUser(id, user);
+            if (newlyUserGroupIds != null) {
+                for (Long id : newlyUserGroupIds) {
+                    UserLocalServiceUtil.addUserGroupUser(id, user);
+                }
             }
 
             UserLocalServiceUtil.updateUser(user);
