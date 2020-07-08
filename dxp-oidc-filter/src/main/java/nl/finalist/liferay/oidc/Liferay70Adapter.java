@@ -13,14 +13,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringPool;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
+import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
-
-import nl.finalist.liferay.oidc.configuration.OpenIDConnectOCDConfiguration;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
 
 
 public class Liferay70Adapter implements LiferayAdapter {
@@ -116,7 +114,7 @@ public class Liferay70Adapter implements LiferayAdapter {
     }
 
     @Override
-    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, ArrayList<String> roles) {
+    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, List<String> groups) {
         return null;
     }
 

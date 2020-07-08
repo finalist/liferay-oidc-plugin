@@ -40,19 +40,19 @@ public class LibFilter  {
      * Property that is used to configure whether to enable OpenID Connect auth
      */
     public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
-    
+
     public enum FilterResult {
-    	CONTINUE_CHAIN, 
+    	CONTINUE_CHAIN,
     	BREAK_CHAIN;
     }
-    
-    
+
+
     /**
      * Session attribute name containing the UserInfo
      */
     public static final String OPENID_CONNECT_SESSION_ATTR = "OpenIDConnectUserInfo";
 
-  
+
     private final LiferayAdapter liferay;
 
     public LibFilter(LiferayAdapter liferay) {
@@ -61,8 +61,8 @@ public class LibFilter  {
 
 
     /**
-     * Filter the request. 
-     * <br><br>LOGIN:<br> 
+     * Filter the request.
+     * <br><br>LOGIN:<br>
      * The first time this filter gets hit, it will redirect to the OP.
      * Second time it will expect a code and state param to be set, and will exchange the code for an access token.
      * Then it will request the UserInfo given the access token.
@@ -70,7 +70,7 @@ public class LibFilter  {
      * Result: the OpenID Connect 1.0 flow.
      * <br><br>LOGOUT:<br>
      * When the filter is hit and according values for SSO logout are set, it will redirect to the OP logout resource.
-     * From there the request should be redirected "back" to a public portal page or the public portal home page. 
+     * From there the request should be redirected "back" to a public portal page or the public portal home page.
      *
      * @param request the http request
      * @param response the http response
@@ -78,7 +78,7 @@ public class LibFilter  {
      * @throws Exception according to interface.
      * @return FilterResult, to be able to distinct between continuing the chain or breaking it.
      */
-    protected FilterResult processFilter(HttpServletRequest request, HttpServletResponse response, FilterChain 
+    protected FilterResult processFilter(HttpServletRequest request, HttpServletResponse response, FilterChain
             filterChain) throws Exception {
 
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
@@ -180,10 +180,6 @@ public class LibFilter  {
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
 
-            Set<Map.Entry<String, Object>> customFields = oAuthResponse.getIdToken().getClaimsSet().getCustomFields();
-
-            List<String> roles = getRolesOfUser(customFields);
-
 
             liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
@@ -203,7 +199,6 @@ public class LibFilter  {
             liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
-            openIDUserInfo.put("roles", roles);
 
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
@@ -211,24 +206,6 @@ public class LibFilter  {
         } catch (OAuthSystemException | OAuthProblemException e) {
             throw new IOException("While exchanging code for access token and retrieving user info", e);
         }
-    }
-
-    protected static List<String> getRolesOfUser(Set<Map.Entry<String, Object>> customFields) {
-        Map<String, Object> map = mappingOfSet(customFields);
-        List<String> roles = new ArrayList<>();
-
-        Object[] rolesArray = (Object[]) map.get("roles");
-
-        if (rolesArray != null) {
-
-            ArrayList<Object> arrayList = new ArrayList<>(Arrays.asList(rolesArray));
-
-            for (Object role : arrayList) {
-                roles.add(role.toString());
-            }
-        }
-
-        return roles;
     }
 
     private static Map<String, Object> mappingOfSet(Set<Map.Entry<String, Object>> customFields) {
@@ -260,8 +237,8 @@ public class LibFilter  {
             throw new IOException("While redirecting to OP for SSO login", e);
         }
     }
-    
-    protected void redirectToLogout(HttpServletRequest request, HttpServletResponse response, 
+
+    protected void redirectToLogout(HttpServletRequest request, HttpServletResponse response,
     		String logoutUrl, String logoutUrlParamName, String logoutUrlParamValue) throws
     		IOException {
 			// build logout URL and append params if present
@@ -281,7 +258,7 @@ public class LibFilter  {
     protected String generateStateParam(HttpServletRequest request) {
         return DigestUtils.md5Hex(request.getSession().getId());
     }
-    
+
     protected boolean isUserLoggedIn(HttpServletRequest request) {
         return liferay.isUserLoggedIn(request);
     }
@@ -293,12 +270,12 @@ public class LibFilter  {
     		anchor = url.substring(posOfAnchor);
     		url = url.substring(0, posOfAnchor);
     	}
-    	
+
 		StringBuffer sb = new StringBuffer();
 		sb.append(url);
 		if (url.indexOf('?') < 0) {
 			sb.append('?');
-		} else 
+		} else
 		if (!url.endsWith("?") && !url.endsWith("&")) {
 			sb.append('&');
 		}
