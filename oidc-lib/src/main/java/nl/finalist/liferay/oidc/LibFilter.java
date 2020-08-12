@@ -20,10 +20,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +30,7 @@ import java.util.Set;
  * Servlet filter that initiates OpenID Connect logins, and handles the resulting flow, until and including the
  * UserInfo request. It saves the UserInfo in a session attribute, to be examined by an AutoLogin.
  */
-public class LibFilter  {
+public class LibFilter {
 
     public static final String REQ_PARAM_CODE = "code";
     public static final String REQ_PARAM_STATE = "state";
@@ -42,8 +41,8 @@ public class LibFilter  {
     public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
 
     public enum FilterResult {
-    	CONTINUE_CHAIN,
-    	BREAK_CHAIN;
+        CONTINUE_CHAIN,
+        BREAK_CHAIN;
     }
 
 
@@ -72,11 +71,11 @@ public class LibFilter  {
      * When the filter is hit and according values for SSO logout are set, it will redirect to the OP logout resource.
      * From there the request should be redirected "back" to a public portal page or the public portal home page.
      *
-     * @param request the http request
-     * @param response the http response
+     * @param request     the http request
+     * @param response    the http response
      * @param filterChain the filterchain
-     * @throws Exception according to interface.
      * @return FilterResult, to be able to distinct between continuing the chain or breaking it.
+     * @throws Exception according to interface.
      */
     protected FilterResult processFilter(HttpServletRequest request, HttpServletResponse response, FilterChain
             filterChain) throws Exception {
@@ -84,75 +83,54 @@ public class LibFilter  {
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
         LiferaySitesConfiguration liferaySitesConfiguration = liferay.getLiferaySitesConfiguration();
 
-        // If the plugin is not enabled, short circuit immediately
-        if (!oidcConfiguration.isEnabled()) {
-            liferay.trace("OpenIDConnectFilter not enabled for this virtual instance. Will skip it.");
+        boolean skipFilter = checkIfFilterShouldBeSkipped(oidcConfiguration, liferaySitesConfiguration, request.getServerName());
+        String pathInfo = request.getPathInfo();
+        if (skipFilter || pathInfo == null) {
+            liferay.trace("skipping filter, not in domain list or pathInfo is null");
             return FilterResult.CONTINUE_CHAIN;
         }
 
         liferay.trace("In processFilter()...");
+        if (pathInfo.contains("/portal/login")) {
+            if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
+                    && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
 
-        String pathInfo = request.getPathInfo();
-
-        List<String> list = new ArrayList<>(Arrays.asList(liferaySitesConfiguration.sitesToInclude()));
-        String serverName = request.getServerName();
-
-        boolean containsSite = isContainsSite(serverName, list);
-
-        if (null != pathInfo) {
-            if (containsSite) {
-                if (pathInfo.contains("/portal/login")) {
-                    if (!StringUtils.isBlank(request.getParameter(REQ_PARAM_CODE))
-                            && !StringUtils.isBlank(request.getParameter(REQ_PARAM_STATE))) {
-
-                        if (!isUserLoggedIn(request)) {
-                            // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
-                            liferay.trace("About to exchange code for access token");
-                            exchangeCodeForAccessToken(request);
-                        } else {
-                            liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
-                                    "Will not exchange code for token twice.");
-                        }
-                    } else {
-                        // LOGIN: The first time this filter gets hit, it will redirect to the OP.
-                        liferay.trace("About to redirect to OpenID Provider");
-                        redirectToLogin(request, response, oidcConfiguration.clientId());
-                        // no continuation of the filter chain; we expect the redirect to commence.
-                        return FilterResult.BREAK_CHAIN;
-                    }
-                } }
-                else
-                if (pathInfo.contains("/portal/logout")) {
-                    final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
-                    final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
-                    final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
-                    if (null != ssoLogoutUri && ssoLogoutUri.length
-                        () > 0 && isUserLoggedIn(request)) {
-
-                        liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
-                        // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
-                        // From there, the request should be redirected back to the Liferay portal home page.
-                        request.getSession().invalidate();
-                        redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
-                        // no continuation of the filter chain; we expect the redirect to commence.
-                        return FilterResult.BREAK_CHAIN;
-                    }
+                if (!isUserLoggedIn(request)) {
+                    // LOGIN: Second time it will expect a code and state param to be set, and will exchange the code for an access token.
+                    liferay.trace("About to exchange code for access token");
+                    exchangeCodeForAccessToken(request);
+                } else {
+                    liferay.trace("subsequent run into filter during openid conversation, but already logged in." +
+                            "Will not exchange code for token twice.");
                 }
-		}
-        // continue chain
-		return FilterResult.CONTINUE_CHAIN;
+            } else {
+                // LOGIN: The first time this filter gets hit, it will redirect to the OP.
+                liferay.trace("About to redirect to OpenID Provider");
+                redirectToLogin(request, response, oidcConfiguration.clientId());
+                // no continuation of the filter chain; we expect the redirect to commence.
+                return FilterResult.BREAK_CHAIN;
+            }
+        } else if (pathInfo.contains("/portal/logout")) {
+            final String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
+            final String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
+            final String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
+            if (null != ssoLogoutUri && ssoLogoutUri.length() > 0 && isUserLoggedIn(request)) {
 
-    }
-
-    private boolean isContainsSite(String serverName, List<String> list) {
-        boolean containsSite = false;
-        for (String site : list){
-            if (serverName.contains(site)){
-                containsSite = true;
+                liferay.trace("About to logout from SSO by redirect to " + ssoLogoutUri);
+                // LOGOUT: If Portal Logout URL is requested, redirect to OIDC Logout resource afterwards to globally logout.
+                // From there, the request should be redirected back to the Liferay portal home page.
+                request.getSession().invalidate();
+                redirectToLogout(request, response, ssoLogoutUri, ssoLogoutParam, ssoLogoutValue);
+                // no continuation of the filter chain; we expect the redirect to commence.
+                return FilterResult.BREAK_CHAIN;
             }
         }
-        return containsSite;
+
+        // continue chain
+        return FilterResult.CONTINUE_CHAIN;
+
     }
+
 
     protected void exchangeCodeForAccessToken(HttpServletRequest request) throws IOException {
         OIDCConfiguration oidcConfiguration = liferay.getOIDCConfiguration(liferay.getCompanyId(request));
@@ -179,7 +157,6 @@ public class LibFilter  {
 
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
             OpenIdConnectResponse oAuthResponse = oAuthClient.accessToken(tokenRequest, OpenIdConnectResponse.class);
-
 
             liferay.trace("Access/id token response: " + oAuthResponse);
             String accessToken = oAuthResponse.getAccessToken();
@@ -208,14 +185,24 @@ public class LibFilter  {
         }
     }
 
-    private static Map<String, Object> mappingOfSet(Set<Map.Entry<String, Object>> customFields) {
-        Map<String, Object> map = new HashMap<>();
 
-        for(Map.Entry<String, Object> entry : customFields) {
-            map.put(entry.getKey(), entry.getValue());
+    private boolean checkIfFilterShouldBeSkipped(
+            final OIDCConfiguration oidcConfiguration,
+            final LiferaySitesConfiguration liferaySitesConfiguration,
+            final String serverNameRequest) {
+
+        boolean skipFilter = false;
+        final Set<String> includedServerName = new HashSet<>(Arrays.asList(liferaySitesConfiguration.sitesToInclude()));
+
+        if (!oidcConfiguration.isEnabled()) {
+            liferay.trace("OpenIDConnectFilter not enabled for this virtual instance. Will skip it.");
+            skipFilter = true;
         }
-
-        return map;
+        if (!includedServerName.contains(serverNameRequest)) {
+            liferay.trace("OpenIDConnectFilter not enabled for this servername, skit it");
+            skipFilter = true;
+        }
+        return skipFilter;
     }
 
     protected void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String clientId) throws
@@ -239,14 +226,14 @@ public class LibFilter  {
     }
 
     protected void redirectToLogout(HttpServletRequest request, HttpServletResponse response,
-    		String logoutUrl, String logoutUrlParamName, String logoutUrlParamValue) throws
-    		IOException {
-			// build logout URL and append params if present
-			if (StringUtils.isNotEmpty(logoutUrlParamName) && StringUtils.isNotEmpty(logoutUrlParamValue)) {
-				logoutUrl = addParameter(logoutUrl, logoutUrlParamName, logoutUrlParamValue);
-			}
-			liferay.debug("On " + request.getRequestURL() + " redirect to OP for SSO logout: " + logoutUrl);
-			response.sendRedirect(logoutUrl);
+                                    String logoutUrl, String logoutUrlParamName, String logoutUrlParamValue) throws
+            IOException {
+        // build logout URL and append params if present
+        if (StringUtils.isNotEmpty(logoutUrlParamName) && StringUtils.isNotEmpty(logoutUrlParamValue)) {
+            logoutUrl = addParameter(logoutUrl, logoutUrlParamName, logoutUrlParamValue);
+        }
+        liferay.debug("On " + request.getRequestURL() + " redirect to OP for SSO logout: " + logoutUrl);
+        response.sendRedirect(logoutUrl);
     }
 
     protected String getRedirectUri(HttpServletRequest request) {
@@ -264,31 +251,30 @@ public class LibFilter  {
     }
 
     protected String addParameter(String url, String param, String value) {
-    	String anchor = "";
-    	int posOfAnchor = url.indexOf('#');
-    	if (posOfAnchor > -1) {
-    		anchor = url.substring(posOfAnchor);
-    		url = url.substring(0, posOfAnchor);
-    	}
+        String anchor = "";
+        int posOfAnchor = url.indexOf('#');
+        if (posOfAnchor > -1) {
+            anchor = url.substring(posOfAnchor);
+            url = url.substring(0, posOfAnchor);
+        }
 
-		StringBuffer sb = new StringBuffer();
-		sb.append(url);
-		if (url.indexOf('?') < 0) {
-			sb.append('?');
-		} else
-		if (!url.endsWith("?") && !url.endsWith("&")) {
-			sb.append('&');
-		}
-		sb.append(param);
-		sb.append('=');
-		try {
-			sb.append(URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
-		} catch (UnsupportedEncodingException e) {
-			sb.append(value);
-		}
-		sb.append(anchor);
+        StringBuffer sb = new StringBuffer();
+        sb.append(url);
+        if (url.indexOf('?') < 0) {
+            sb.append('?');
+        } else if (!url.endsWith("?") && !url.endsWith("&")) {
+            sb.append('&');
+        }
+        sb.append(param);
+        sb.append('=');
+        try {
+            sb.append(URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+        } catch (UnsupportedEncodingException e) {
+            sb.append(value);
+        }
+        sb.append(anchor);
 
-    	return sb.toString() + anchor;
+        return sb.toString() + anchor;
     }
 
 }
