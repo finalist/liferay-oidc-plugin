@@ -176,6 +176,13 @@ public class LibFilter {
             liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
+            // If legacyUsername is present, we replace the nickname value (used later as username in liferay)
+            String legacyUsername = (String) openIDUserInfo.get("https://extranet.optimumgeneral.com/legacyUsername");
+            liferay.debug("legacyUsername is " +  legacyUsername);
+            if (legacyUsername != null) {
+                openIDUserInfo.put("nickname", legacyUsername);
+            }
+
 
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
