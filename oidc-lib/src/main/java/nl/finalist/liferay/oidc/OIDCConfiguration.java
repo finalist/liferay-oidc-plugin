@@ -72,4 +72,9 @@ public interface OIDCConfiguration {
      * Group claim
      */
     String groupClaim();
+
+    /**
+     * Group claim
+     */
+    String legacyUsernameClaim();
 }

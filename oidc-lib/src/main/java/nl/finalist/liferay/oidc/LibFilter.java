@@ -39,6 +39,7 @@ public class LibFilter {
      * Property that is used to configure whether to enable OpenID Connect auth
      */
     public static final String PROPKEY_ENABLE_OPEN_IDCONNECT = "openidconnect.enableOpenIDConnect";
+    public static final String PROPKEY_LEGACY_USERNAME = "openidconnect.legacyusername";
 
     public enum FilterResult {
         CONTINUE_CHAIN,
@@ -176,11 +177,11 @@ public class LibFilter {
             liferay.debug("Response from UserInfo request: " + userInfoResponse.getBody());
             Map openIDUserInfo = new ObjectMapper().readValue(userInfoResponse.getBody(), HashMap.class);
 
-            // If legacyUsername is present, we replace the nickname value (used later as username in liferay)
-            String legacyUsername = (String) openIDUserInfo.get("https://extranet.optimumgeneral.com/legacyUsername");
+            String legacyUsernameClaim = oidcConfiguration.legacyUsernameClaim().toLowerCase();
+            String legacyUsername = (String) openIDUserInfo.get(legacyUsernameClaim);
             liferay.debug("legacyUsername is " +  legacyUsername);
             if (legacyUsername != null) {
-                openIDUserInfo.put("legacyUsername", legacyUsername);
+                openIDUserInfo.put(legacyUsernameClaim, legacyUsername);
             }
 
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
