@@ -31,10 +31,9 @@ public interface LiferayAdapter {
      * @param emailAddress the email address of the Liferay user
      * @param firstName the first name of the Liferay user
      * @param lastName last name of the Liferay user
+     * @param screenName to be used as screename of the Liferay user
      * @return the userId of the created or updated User, as a String
      */
-    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName);
-
-    String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName, List<String> groups);
+    String createOrUpdateUser(long companyId, String screenName, String emailAddress, String firstName, String lastName, List<String> groups);
 
 }

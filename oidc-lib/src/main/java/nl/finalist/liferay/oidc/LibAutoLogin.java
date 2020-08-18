@@ -55,7 +55,13 @@ public class LibAutoLogin {
                 String givenName = provider.getFirstName(userInfo);
                 String familyName = provider.getLastName(userInfo);
 
-                String userId = liferay.createOrUpdateUser(companyId, emailAddress, givenName, familyName, groups);
+                String legacyUsername = userInfo.get("legacyUsername");
+                System.out.println("ok we got legacyUsername autologin3 " + legacyUsername);
+
+
+                System.out.println("1before createOrUpdateUser");
+                String userId = liferay.createOrUpdateUser(companyId, legacyUsername, emailAddress, givenName, familyName, groups);
+                System.out.println("user id is "+ userId);
                 liferay.trace("Returning credentials for userId " + userId + ", email: " + emailAddress);
 
                 userResponse = new String[]{userId, UUID.randomUUID().toString(), "false"};

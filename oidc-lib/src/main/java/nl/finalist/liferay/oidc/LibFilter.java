@@ -180,9 +180,8 @@ public class LibFilter {
             String legacyUsername = (String) openIDUserInfo.get("https://extranet.optimumgeneral.com/legacyUsername");
             liferay.debug("legacyUsername is " +  legacyUsername);
             if (legacyUsername != null) {
-                openIDUserInfo.put("nickname", legacyUsername);
+                openIDUserInfo.put("legacyUsername", legacyUsername);
             }
-
 
             liferay.debug("Setting OpenIDUserInfo object in session: " + openIDUserInfo);
             request.getSession().setAttribute(OPENID_CONNECT_SESSION_ATTR, openIDUserInfo);
