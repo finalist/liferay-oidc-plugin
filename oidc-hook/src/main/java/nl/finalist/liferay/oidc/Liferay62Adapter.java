@@ -202,7 +202,7 @@ public class Liferay62Adapter implements LiferayAdapter {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setMiddleName(userDto.getMiddleName());
-
+        user.setEmailAddress(userDto.getEmail());
         try {
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {

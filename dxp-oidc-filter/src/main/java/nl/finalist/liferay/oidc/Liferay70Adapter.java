@@ -228,6 +228,7 @@ public class Liferay70Adapter implements LiferayAdapter {
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setMiddleName(userDto.getMiddleName());
+        user.setEmailAddress(userDto.getEmail());
 
         try {
             userLocalService.updateUser(user);
