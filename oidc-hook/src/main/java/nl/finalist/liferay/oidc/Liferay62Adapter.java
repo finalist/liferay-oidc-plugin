@@ -136,14 +136,14 @@ public class Liferay62Adapter implements LiferayAdapter {
             final Set<Long> oldUserGroupIds = UserGroupLocalServiceUtil.getUserUserGroups(userId).stream()
                     .map(UserGroupModel::getUserGroupId)
                     .collect(Collectors.toSet());
-            final Set<Long> newIds = newUserGroupIds.stream()
+            final long[] newIdsArray = newUserGroupIds.stream()
                     .filter(id -> !oldUserGroupIds.contains(id))
-                    .collect(Collectors.toSet());
-            final long[] deleteIds = oldUserGroupIds.stream()
-                    .filter(id -> !newIds.contains(id))
                     .mapToLong(Long::longValue)
                     .toArray();
-            final long[] newIdsArray = newIds.stream().mapToLong(Long::longValue).toArray();
+            final long[] deleteIds = oldUserGroupIds.stream()
+                    .filter(id -> !newUserGroupIds.contains(id))
+                    .mapToLong(Long::longValue)
+                    .toArray();
             if (newIdsArray != null && newIdsArray.length > 0) {
                 UserUtil.addUserGroups(userId, newIdsArray);
                 UserGroupUtil.clearCache();
