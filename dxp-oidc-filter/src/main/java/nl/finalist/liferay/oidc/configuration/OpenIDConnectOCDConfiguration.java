@@ -1,8 +1,7 @@
 package nl.finalist.liferay.oidc.configuration;
 
-import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
-
 import aQute.bnd.annotation.metatype.Meta;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import nl.finalist.liferay.oidc.OIDCConfiguration;
 
 /**
@@ -39,22 +38,27 @@ public interface OpenIDConnectOCDConfiguration extends OIDCConfiguration {
     String tokenLocation();
 
     @Meta.AD(
-        required = true
+            required = true
     )
     String profileUri();
 
     @Meta.AD(
-        required = false
+            required = false
     )
     String ssoLogoutUri();
 
     @Meta.AD(
-        required = false
+            required = false
+    )
+    String ssoLogoutToken();
+
+    @Meta.AD(
+            required = false
     )
     String ssoLogoutParam();
 
     @Meta.AD(
-        required = false
+            required = false
     )
     String ssoLogoutValue();
 

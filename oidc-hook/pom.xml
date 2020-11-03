@@ -5,7 +5,7 @@
     <parent>
         <artifactId>oidc-parent</artifactId>
         <groupId>nl.finalist.liferay.oidc</groupId>
-        <version>0.5.3-SNAPSHOT</version>
+        <version>0.5.3-RELEASE</version>
     </parent>
 
     <artifactId>oidc-hook</artifactId>
@@ -32,6 +32,14 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <outputFileNameMapping>@{artifactId}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>

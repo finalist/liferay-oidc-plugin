@@ -18,7 +18,6 @@ public class ProviderFactory {
 			openIdProvider = new AzureAD();
 		} else {
 			openIdProvider = new UserInfoProvider();
-
 		}
 		
 		return openIdProvider;

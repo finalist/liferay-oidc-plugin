@@ -11,12 +11,12 @@ public interface OIDCConfiguration {
      * Whether this OpenID Connect filter/autologin is enabled or not.
      */
     boolean isEnabled();
-    
+
     /**
      * Location of the authorization service (request token)
      */
     String authorizationLocation();
-    
+
     /**
      * Location of the token service (exchange code for token)
      */
@@ -26,17 +26,22 @@ public interface OIDCConfiguration {
      * UserInfo endpoint
      */
     String profileUri();
-    
+
     /**
      * SSO logout endpoint (if offered)
      */
     String ssoLogoutUri();
-    
+
+    /**
+     * Access token that allows you to log out any user
+     */
+    String ssoLogoutToken();
+
     /**
      * Parameter name supplied to SSO logout endpoint (if offered)
      */
     String ssoLogoutParam();
-    
+
     /**
      * Parameter value supplied to SSO logout endpoint (if offered)
      */
@@ -64,6 +69,7 @@ public interface OIDCConfiguration {
 
     /**
      * Provider type, either Generic or Azure AD
+     *
      * @return
      */
     String providerType();

@@ -4,18 +4,22 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.User;
+import com.liferay.portal.model.UserGroup;
+import com.liferay.portal.model.UserGroupModel;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
+import com.liferay.portal.service.persistence.UserGroupUtil;
+import com.liferay.portal.service.persistence.UserUtil;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.util.PwdGenerator;
-
-import java.util.Calendar;
-import java.util.Locale;
+import nl.finalist.liferay.oidc.dto.PersonGroupDto;
+import nl.finalist.liferay.oidc.dto.UserDto;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Liferay62Adapter implements LiferayAdapter {
 
@@ -71,79 +75,139 @@ public class Liferay62Adapter implements LiferayAdapter {
     }
 
     @Override
-    public String createOrUpdateUser(long companyId, String emailAddress, String firstName, String lastName) {
-
+    public Long createOrUpdateUser(long companyId, UserDto userDto) {
         try {
-            User user = UserLocalServiceUtil.fetchUserByEmailAddress(companyId, emailAddress);
+            User user = UserLocalServiceUtil.fetchUserByUuidAndCompanyId(userDto.getUuid(), companyId);
 
             if (user == null) {
-                LOG.debug("No Liferay user found with email address " + emailAddress + ", will create one.");
-                user = addUser(companyId, emailAddress, firstName, lastName);
+                LOG.debug("No Liferay user found with email address " + userDto.getUuid() + ", will create one.");
+                user = addUser(companyId, userDto);
             } else {
                 LOG.debug("User found, updating name details with info from userinfo");
-                updateUser(user, firstName, lastName);
+                updateUser(user, userDto);
             }
-            return String.valueOf(user.getUserId());
-
+            return user.getUserId();
         } catch (SystemException | PortalException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
+    public Set<Long> createOrUpdateUserGroup(long companyId, long userId, Set<PersonGroupDto> personGroupDtos) {
+        Set<Long> groupIds = new HashSet<>();
+        for (PersonGroupDto personGroupDto : personGroupDtos) {
+            try {
+                UserGroup userGroup = UserGroupLocalServiceUtil.fetchUserGroupByUuidAndCompanyId(personGroupDto.getUuid(), companyId);
+                if (userGroup == null) {
+                    userGroup = addNewUserGroup(companyId, userId, personGroupDto);
+                } else {
+                    userGroup = updateUserGroup(userGroup, personGroupDto);
+                }
+                groupIds.add(userGroup.getUserGroupId());
+            } catch (SystemException e) {
+                LOG.error(e.getMessage());
+            }
+        }
+        return groupIds;
+    }
+
+    private UserGroup updateUserGroup(UserGroup userGroup, PersonGroupDto personGroupDto) {
+        try {
+            userGroup.setName(personGroupDto.getName());
+            return UserGroupLocalServiceUtil.updateUserGroup(userGroup);
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private UserGroup addNewUserGroup(long companyId, long userId, PersonGroupDto personGroupDto) {
+        try {
+            final UserGroup userGroup = UserGroupLocalServiceUtil.addUserGroup(userId, companyId, personGroupDto.getName(), null, null);
+            userGroup.setUuid(personGroupDto.getUuid());
+            return UserGroupLocalServiceUtil.updateUserGroup(userGroup);
+        } catch (PortalException | SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void addUserInUserGroup(Long userId, Set<Long> newUserGroupIds) {
+        try {
+            final Set<Long> oldUserGroupIds = UserGroupLocalServiceUtil.getUserUserGroups(userId).stream()
+                    .map(UserGroupModel::getUserGroupId)
+                    .collect(Collectors.toSet());
+            final long[] newIdsArray = newUserGroupIds.stream()
+                    .filter(id -> !oldUserGroupIds.contains(id))
+                    .mapToLong(Long::longValue)
+                    .toArray();
+            final long[] deleteIds = oldUserGroupIds.stream()
+                    .filter(id -> !newUserGroupIds.contains(id))
+                    .mapToLong(Long::longValue)
+                    .toArray();
+            if (newIdsArray != null && newIdsArray.length > 0) {
+                UserUtil.addUserGroups(userId, newIdsArray);
+                UserGroupUtil.clearCache();
+            }
+            if (deleteIds != null && deleteIds.length > 0) {
+                UserUtil.removeUserGroups(userId, deleteIds);
+                UserGroupUtil.clearCache();
+            }
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     // Copied from OpenSSOAutoLogin.java
-    protected User addUser(
-            long companyId, String emailAddress, String firstName, String lastName)
-            throws SystemException, PortalException {
-
-        Locale locale = LocaleUtil.getMostRelevantLocale();
-        long creatorUserId = 0;
-        boolean autoPassword = false;
-        String password1 = PwdGenerator.getPassword();
-        String password2 = password1;
-        boolean autoScreenName = true;
-        String screenName = "not_used_but_autogenerated_instead";
-        long facebookId = 0;
-        String openId = StringPool.BLANK;
-        String middleName = StringPool.BLANK;
-        int prefixId = 0;
-        int suffixId = 0;
-        boolean male = true;
-        int birthdayMonth = Calendar.JANUARY;
-        int birthdayDay = 1;
-        int birthdayYear = 1970;
-        String jobTitle = StringPool.BLANK;
-        long[] groupIds = null;
-        long[] organizationIds = null;
-        long[] roleIds = null;
-        long[] userGroupIds = null;
-        boolean sendEmail = false;
+    protected User addUser(long companyId, UserDto userDto) throws SystemException, PortalException {
         ServiceContext serviceContext = new ServiceContext();
 
         User user = UserLocalServiceUtil.addUser(
-                creatorUserId, companyId, autoPassword, password1, password2,
-                autoScreenName, screenName, emailAddress, facebookId, openId,
-                locale, firstName, middleName, lastName, prefixId, suffixId, male,
-                birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-                organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
-
-        // No password
-        user.setPasswordReset(false);
-        // No reminder query at first login.
-        user.setReminderQueryQuestion("x");
-        user.setReminderQueryAnswer("y");
+                userDto.getCreatorUserId(),
+                companyId,
+                userDto.isAutoPassword(),
+                userDto.getPassword1(),
+                userDto.getPassword2(),
+                userDto.isAutoScreenName(),
+                userDto.getScreenName(),
+                userDto.getEmail(),
+                userDto.getFacebookId(),
+                userDto.getOpenId(),
+                userDto.getLocale(),
+                userDto.getFirstName(),
+                userDto.getMiddleName(),
+                userDto.getLastName(),
+                userDto.getPrefixId(),
+                userDto.getSuffixId(),
+                userDto.isMale(),
+                userDto.getBirthdayMonth(),
+                userDto.getBirthdayDay(),
+                userDto.getBirthdayYear(),
+                userDto.getJobTitle(),
+                userDto.getGroupIds(),
+                userDto.getOrganizationIds(),
+                userDto.getRoleIds(),
+                null,
+                userDto.isSendEmail(),
+                serviceContext
+        );
+        user.setUuid(userDto.getUuid());
+        user.setPasswordReset(userDto.isPasswordReset());
+        user.setReminderQueryQuestion(userDto.getQueryQuestion());
+        user.setReminderQueryAnswer(userDto.getQueryAnswer());
         UserLocalServiceUtil.updateUser(user);
         return user;
     }
 
-
-    private void updateUser(User user, String firstName, String lastName) {
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
+    private void updateUser(User user, UserDto userDto) {
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        user.setMiddleName(userDto.getMiddleName());
+        user.setEmailAddress(userDto.getEmail());
         try {
             UserLocalServiceUtil.updateUser(user);
         } catch (SystemException e) {
             LOG.error("Could not update user with new name attributes", e);
         }
     }
+
 }
