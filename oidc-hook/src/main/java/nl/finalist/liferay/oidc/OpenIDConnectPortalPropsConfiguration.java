@@ -62,6 +62,15 @@ public class OpenIDConnectPortalPropsConfiguration implements OIDCConfiguration 
     }
 
     @Override
+    public String ssoLogoutToken() {
+        try {
+            return PrefsPropsUtil.getString("openidconnect.sso-logout-token", "");
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public String ssoLogoutParam() {
         try {
             return PrefsPropsUtil.getString("openidconnect.sso-logout-param", "");

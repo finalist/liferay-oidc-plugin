@@ -96,7 +96,8 @@ public class LibFilter {
             } else if (pathInfo.contains("/portal/logout")) {
                 final String requestTokenHeader = request.getHeader("ServiceAuth");
                 final String uuid = request.getParameter("uuid");
-                if ("vBLFvS5jMGo7ntTZedqL4rfnbBQJ8N".equals(requestTokenHeader)) {
+                final String ssoLogoutToken = oidcConfiguration.ssoLogoutToken();
+                if (ssoLogoutToken != null && uuid != null && ssoLogoutToken.equals(requestTokenHeader)) {
                     final User user = UserLocalServiceUtil.fetchUserByUuidAndCompanyId(uuid, liferay.getCompanyId(request));
                     if (user != null) {
                         AuthenticatedSessionManagerUtil.signOutSimultaneousLogins(user.getUserId());

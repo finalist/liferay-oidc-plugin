@@ -14,6 +14,7 @@
     String tokenLocation = oidcConfiguration.tokenLocation();
     String profileUri = oidcConfiguration.profileUri();
     String ssoLogoutUri = oidcConfiguration.ssoLogoutUri();
+    String ssoLogoutToken = oidcConfiguration.ssoLogoutToken();
     String ssoLogoutParam = oidcConfiguration.ssoLogoutParam();
     String ssoLogoutValue = oidcConfiguration.ssoLogoutValue();
     String issuer = oidcConfiguration.issuer();
@@ -39,6 +40,8 @@
         <aui:option label="azure" value="azure" />
     </aui:select>
     <aui:input cssClass="lfr-input-text-container" label="ssoLogoutUri" name='<%= ns + "ssoLogoutUri" %>' type="text" value="<%= ssoLogoutUri %>" />
+    <aui:input cssClass="lfr-input-text-container" label="ssoLogoutToken" name='<%= ns + "ssoLogoutToken" %>'
+               type="text" value="<%= ssoLogoutToken %>"/>
     <aui:input cssClass="lfr-input-text-container" label="ssoLogoutParam" name='<%= ns + "ssoLogoutParam" %>' type="text" value="<%= ssoLogoutParam %>" />
     <aui:input cssClass="lfr-input-text-container" label="ssoLogoutValue" name='<%= ns + "ssoLogoutValue" %>' type="text" value="<%= ssoLogoutValue %>" />
 
